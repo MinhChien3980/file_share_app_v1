@@ -1,0 +1,68 @@
+entity Post {
+  content    TextBlob,
+  createdAt  Instant,
+  updatedAt  Instant
+}
+entity File {
+  fileName    String,
+  fileUrl     TextBlob,
+  mimeType    String,
+  fileSize    Long,
+  uploadedAt  Instant
+}
+entity Comment {
+  content    TextBlob,
+  createdAt  Instant
+}
+entity Favorite {
+  savedAt    Instant
+}
+entity Follow {
+  createdAt  Instant
+}
+entity Notification {
+  message    String,
+  isRead     Boolean,
+  createdAt  Instant
+}
+entity Tag {
+  name       String required
+}
+entity PostTag {
+
+}
+
+relationship ManyToOne {
+  Post{user(login)}         to User       with builtInEntity
+  Comment{user(login)}      to User       with builtInEntity
+  Favorite{user(login)}     to User       with builtInEntity
+  Notification{user(login)} to User       with builtInEntity
+  Follow{follower(login)}   to User       with builtInEntity
+  Follow{following(login)}  to User       with builtInEntity
+  PostTag{tag}              to Tag
+}
+relationship OneToMany {
+  Post{files}    to File{post}
+  Post{comments} to Comment{post}
+  Post{favorites} to Favorite{post}
+  Post{postTags} to PostTag{post}
+}
+
+dto * with mapstruct
+service * with serviceClass
+paginate Post, Comment, File, Tag with pagination
+
+application {
+  config {
+    baseName           fileShareApp
+    packageName        com.fileshareapp.myapp
+    applicationType    monolith
+    authenticationType jwt
+    prodDatabaseType   mysql
+    devDatabaseType    mysql
+    buildTool          maven
+    clientFramework    react
+    skipUserManagement false
+  }
+  entities Post, File, Comment, Favorite, Follow, Notification, Tag, PostTag
+}

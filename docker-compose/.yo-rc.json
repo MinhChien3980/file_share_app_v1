@@ -1,0 +1,10 @@
+{
+  "generator-jhipster": {
+    "appsFolders": ["file_share_app_v1"],
+    "directoryPath": "../../",
+    "jhipsterVersion": "8.11.0",
+    "jwtSecretKey": "NjZiZGM1MThhZDY0NDllMmIyODZjZTQ4NzRiMDgzMjE0YzkyNDhiMDcwMzhmOTNlYTllZjI4NGM1YTVmYzkxZWIxMmE5OWFmZGU0NWVkZjQ2MzFmNTRkZTYyOTgzMDQ0YjE3YQ==",
+    "monitoring": "no",
+    "serviceDiscoveryType": "no"
+  }
+}
