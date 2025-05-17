@@ -1,0 +1,10 @@
+{
+  "fileShareAppV1App": {
+    "Privacy": {
+      "null": "",
+      "PUBLIC": "PUBLIC",
+      "FRIENDS": "FRIENDS",
+      "ONLY_ME": "ONLY_ME"
+    }
+  }
+}

@@ -1,68 +1,115 @@
+enum Privacy {
+  PUBLIC,
+  FRIENDS,
+  ONLY_ME
+}
+enum ReactionType {
+  LIKE,
+  LOVE,
+  HAHA,
+  WOW,
+  SAD,
+  ANGRY
+}
 entity Post {
-  content    TextBlob,
-  createdAt  Instant,
-  updatedAt  Instant
+  content        TextBlob   required
+  createdAt      Instant    required
+  updatedAt      Instant    required
+  locationName   String,
+  locationLat    BigDecimal max(90)
+  locationLong   BigDecimal max(180)
+  privacy        Privacy    required,
+  scheduledAt    Instant,
+  viewCount      Long       required
+  commentCount   Long       required
+  shareCount     Long       required
+  reactionCount  Long       required
 }
 entity File {
-  fileName    String,
-  fileUrl     TextBlob,
-  mimeType    String,
-  fileSize    Long,
-  uploadedAt  Instant
+  fileName    String    required,
+  fileUrl     String    required,
+  mimeType    String    required,
+  fileSize    Long      required min(0),
+  uploadedAt  Instant   required
 }
 entity Comment {
-  content    TextBlob,
-  createdAt  Instant
+  content       TextBlob required
+  createdAt     Instant  required
 }
 entity Favorite {
-  savedAt    Instant
+  savedAt       Instant  required
 }
 entity Follow {
-  createdAt  Instant
+  createdAt     Instant  required
 }
 entity Notification {
-  message    String,
-  isRead     Boolean,
-  createdAt  Instant
+  message       String    required
+  isRead        Boolean   required
+  createdAt     Instant   required
 }
 entity Tag {
-  name       String required
+  name          String    required
 }
-entity PostTag {
-
+entity Reaction {
+  type          ReactionType required,
+  reactedAt     Instant      required
+}
+entity Share {
+  createdAt     Instant      required
+}
+entity Mention {
 }
 
 relationship ManyToOne {
-  Post{user(login)}         to User       with builtInEntity
-  Comment{user(login)}      to User       with builtInEntity
-  Favorite{user(login)}     to User       with builtInEntity
-  Notification{user(login)} to User       with builtInEntity
-  Follow{follower(login)}   to User       with builtInEntity
-  Follow{following(login)}  to User       with builtInEntity
-  PostTag{tag}              to Tag
+  // each File points to exactly one Post
+  File{post}                  to Post,
+  // other many-to-one sides
+  Comment{post}               to Post,
+  Favorite{post}              to Post,
+  Reaction{post}              to Post,
+  Share{post}                 to Post,
+  Mention{post}               to Post,
+  // user sides
+  Post{user(login)}           to User with builtInEntity,
+  Comment{user(login)}        to User with builtInEntity,
+  Favorite{user(login)}       to User with builtInEntity,
+  Follow{follower(login)}     to User with builtInEntity,
+  Follow{following(login)}    to User with builtInEntity,
+  Notification{user(login)}   to User with builtInEntity,
+  Reaction{user(login)}       to User with builtInEntity,
+  Share{user(login)}          to User with builtInEntity,
+  Mention{user(login)}        to User with builtInEntity,
+  // self-reference
+  Comment{parentComment(id)}  to Comment
 }
-relationship OneToMany {
-  Post{files}    to File{post}
-  Post{comments} to Comment{post}
-  Post{favorites} to Favorite{post}
-  Post{postTags} to PostTag{post}
+//relationship OneToMany {
+//  Post{files}       to File{post},
+//  Post{comments}    to Comment{post},
+//  Post{favorites}   to Favorite{post},
+//  Post{reactions}   to Reaction{post},
+//  Post{shares}      to Share{post},
+//  Post{mentions}    to Mention{post}
+//}
+relationship ManyToMany {
+  Post{tags(name)}  to Tag{posts}
 }
 
 dto * with mapstruct
 service * with serviceClass
-paginate Post, Comment, File, Tag with pagination
+paginate Post, Comment, File, Tag, Notification, Follow, Reaction, Share, Mention with pagination
 
 application {
   config {
-    baseName           fileShareApp
-    packageName        com.fileshareapp.myapp
-    applicationType    monolith
-    authenticationType jwt
-    prodDatabaseType   mysql
-    devDatabaseType    mysql
-    buildTool          maven
-    clientFramework    react
-    skipUserManagement false
+    baseName            fileShareAppV1
+    packageName         com.fileshareappv1.myapp
+    applicationType     monolith
+    authenticationType  jwt
+    prodDatabaseType    mysql
+    devDatabaseType     mysql
+    buildTool           maven
+    clientFramework     react
+    searchEngine        elasticsearch
+    skipUserManagement  false
   }
-  entities Post, File, Comment, Favorite, Follow, Notification, Tag, PostTag
+  entities Post, File, Comment, Favorite, Follow, Notification, Tag, Reaction, Share, Mention
 }

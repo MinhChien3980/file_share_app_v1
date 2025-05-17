@@ -20,13 +20,18 @@ logging:
     org.hibernate.SQL: DEBUG
     com.fileshareappv1.myapp: DEBUG
 
+management:
+  health:
+    elasticsearch:
+      enabled: false
+
 spring:
   devtools:
     restart:
       enabled: true
       additional-exclude: static/**
     livereload:
-      enabled: true # we use Webpack dev server + BrowserSync for livereload
+      enabled: false # we use Webpack dev server + BrowserSync for livereload
   jackson:
     serialization:
       indent-output: true
@@ -43,20 +48,16 @@ spring:
         prepStmtCacheSize: 250
         prepStmtCacheSqlLimit: 2048
         useServerPrepStmts: true
+  elasticsearch:
+    uris: http://localhost:9200
   liquibase:
     # Remove 'faker' if you do not want the sample data to be loaded automatically
     contexts: dev, faker
   mail:
-    host: smtp.gmail.com
-    port: 587
-    username: buiminhchien03@gmail.com
-    password: kwpjmwdvlcglcosk
-    protocol: smtp
-    tls: true
-    properties.mail.smtp:
-      auth: true
-      starttls.enable: true
-      ssl.trust: smtp.gmail.com
+    host: localhost
+    port: 25
+    username:
+    password:
   messages:
     cache-duration: PT1S # 1 second, see the ISO 8601 standard
   thymeleaf:

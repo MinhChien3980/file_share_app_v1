@@ -1,0 +1,38 @@
+{
+  "fileShareAppV1App": {
+    "post": {
+      "home": {
+        "title": "Posts",
+        "refreshListLabel": "Refresh list",
+        "createLabel": "Create a new Post",
+        "createOrEditLabel": "Create or edit a Post",
+        "search": "Search for Post",
+        "notFound": "No Posts found"
+      },
+      "created": "A new Post is created with identifier {{ param }}",
+      "updated": "A Post is updated with identifier {{ param }}",
+      "deleted": "A Post is deleted with identifier {{ param }}",
+      "delete": {
+        "question": "Are you sure you want to delete Post {{ id }}?"
+      },
+      "detail": {
+        "title": "Post"
+      },
+      "id": "ID",
+      "content": "Content",
+      "createdAt": "Created At",
+      "updatedAt": "Updated At",
+      "locationName": "Location Name",
+      "locationLat": "Location Lat",
+      "locationLong": "Location Long",
+      "privacy": "Privacy",
+      "scheduledAt": "Scheduled At",
+      "viewCount": "View Count",
+      "commentCount": "Comment Count",
+      "shareCount": "Share Count",
+      "reactionCount": "Reaction Count",
+      "user": "User",
+      "tags": "Tags"
+    }
+  }
+}

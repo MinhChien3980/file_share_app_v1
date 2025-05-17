@@ -1,0 +1,26 @@
+{
+  "fileShareAppV1App": {
+    "mention": {
+      "home": {
+        "title": "Mentions",
+        "refreshListLabel": "Refresh list",
+        "createLabel": "Thêm mới một Mention",
+        "createOrEditLabel": "Thêm mới hoặc cập nhật Mention",
+        "search": "Tìm Mention",
+        "notFound": "No Mentions found"
+      },
+      "created": "Một Mention mới được tạo với định danh {{ param }}",
+      "updated": "Một Mention cập nhật với định danh {{ param }}",
+      "deleted": "Một Mention đã xóa với định danh {{ param }}",
+      "delete": {
+        "question": "Bạn có chắc là muốn xóa Mention {{ id }}?"
+      },
+      "detail": {
+        "title": "Mention"
+      },
+      "id": "ID",
+      "post": "Post",
+      "user": "User"
+    }
+  }
+}

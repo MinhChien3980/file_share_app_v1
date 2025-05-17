@@ -22,7 +22,7 @@ spring:
       on-profile: '!api-docs'
 springdoc:
   api-docs:
-    enabled: true
+    enabled: false
 ---
 management:
   endpoints:
@@ -61,7 +61,7 @@ management:
       enabled: true
   health:
     mail:
-      enabled: true # When using the MailService, configure an SMTP server and set this to true
+      enabled: false # When using the MailService, configure an SMTP server and set this to true
   prometheus:
     metrics:
       export:
@@ -107,10 +107,7 @@ spring:
         - dev
         - api-docs
         # Uncomment to activate TLS for the dev profile
-        - tls
-      prod:
-        - prod
-        - api-docs
+        #- tls
   jmx:
     enabled: false
   data:
@@ -135,7 +132,7 @@ spring:
       hibernate.query.fail_on_pagination_over_collection_fetch: true
       hibernate.query.in_clause_parameter_padding: true
     hibernate:
-      ddl-auto: update
+      ddl-auto: none
       naming:
         physical-strategy: org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy
         implicit-strategy: org.springframework.boot.orm.jpa.hibernate.SpringImplicitNamingStrategy
@@ -152,6 +149,7 @@ spring:
         jwt:
           authority-prefix: ''
           authorities-claim-name: auth
+          issuer-uri: https://securetoken.google.com/fileshareappserver
   task:
     execution:
       thread-name-prefix: file-share-app-v-1-task-
@@ -181,7 +179,7 @@ springdoc:
 # Properties to be exposed on the /info management endpoint
 info:
   # Comma separated list of profiles that will trigger the ribbon to show
-  display-ribbon-on-profiles: 'dev,prod'
+  display-ribbon-on-profiles: 'dev'
 
 # ===================================================================
 # JHipster specific properties

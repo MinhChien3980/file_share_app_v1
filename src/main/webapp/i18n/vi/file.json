@@ -1,0 +1,30 @@
+{
+  "fileShareAppV1App": {
+    "file": {
+      "home": {
+        "title": "Files",
+        "refreshListLabel": "Refresh list",
+        "createLabel": "Thêm mới một File",
+        "createOrEditLabel": "Thêm mới hoặc cập nhật File",
+        "search": "Tìm File",
+        "notFound": "No Files found"
+      },
+      "created": "Một File mới được tạo với định danh {{ param }}",
+      "updated": "Một File cập nhật với định danh {{ param }}",
+      "deleted": "Một File đã xóa với định danh {{ param }}",
+      "delete": {
+        "question": "Bạn có chắc là muốn xóa File {{ id }}?"
+      },
+      "detail": {
+        "title": "File"
+      },
+      "id": "ID",
+      "fileName": "File Name",
+      "fileUrl": "File Url",
+      "mimeType": "Mime Type",
+      "fileSize": "File Size",
+      "uploadedAt": "Uploaded At",
+      "post": "Post"
+    }
+  }
+}
