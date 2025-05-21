@@ -112,16 +112,16 @@ public class AuthenticateController {
 
         private String idToken;
 
-        JWTToken(String idToken) {
+        public JWTToken(String idToken) {
             this.idToken = idToken;
         }
 
         @JsonProperty("id_token")
-        String getIdToken() {
+        public String getIdToken() {
             return idToken;
         }
 
-        void setIdToken(String idToken) {
+        public void setIdToken(String idToken) {
             this.idToken = idToken;
         }
     }

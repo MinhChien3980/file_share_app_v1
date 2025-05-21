@@ -22,7 +22,7 @@ spring:
       on-profile: '!api-docs'
 springdoc:
   api-docs:
-    enabled: false
+    enabled: true
 ---
 management:
   endpoints:
@@ -61,7 +61,7 @@ management:
       enabled: true
   health:
     mail:
-      enabled: false # When using the MailService, configure an SMTP server and set this to true
+      enabled: true # When using the MailService, configure an SMTP server and set this to true
   prometheus:
     metrics:
       export:
@@ -107,7 +107,12 @@ spring:
         - dev
         - api-docs
         # Uncomment to activate TLS for the dev profile
-        #- tls
+        - tls
+      prod:
+        - prod
+        - api-docs
+        #        - tls
+        - elasticsearch
   jmx:
     enabled: false
   data:
@@ -179,7 +184,7 @@ springdoc:
 # Properties to be exposed on the /info management endpoint
 info:
   # Comma separated list of profiles that will trigger the ribbon to show
-  display-ribbon-on-profiles: 'dev'
+  display-ribbon-on-profiles: 'dev,prod.'
 
 # ===================================================================
 # JHipster specific properties

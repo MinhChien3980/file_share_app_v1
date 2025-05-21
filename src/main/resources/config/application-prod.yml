@@ -17,6 +17,7 @@ logging:
   level:
     ROOT: INFO
     tech.jhipster: INFO
+    org.hibernate.SQL: DEBUG
     com.fileshareappv1.myapp: INFO
 
 management:
@@ -45,15 +46,22 @@ spring:
         prepStmtCacheSqlLimit: 2048
         useServerPrepStmts: true
   elasticsearch:
-    uris: http://localhost:9200
+    uris: http://fileshareapp.io.vn:9200
   # Replace by 'prod, faker' to add the faker context and have sample data loaded in production
   liquibase:
     contexts: prod
   mail:
-    host: localhost
-    port: 25
-    username:
-    password:
+    host: smtp.gmail.com
+    port: 587
+    username: buiminhchien03@gmail.com
+    password: kwpjmwdvlcglcosk
+    protocol: smtp
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls.enable: true
+          ssl.trust: smtp.gmail.com
   thymeleaf:
     cache: true
 
@@ -102,12 +110,12 @@ jhipster:
         # - In the Consul configserver
         # - In a separate `application-prod.yml` file, in the same folder as your executable JAR file
         # - In the `JHIPSTER_SECURITY_AUTHENTICATION_JWT_BASE64_SECRET` environment variable
-        base64-secret: Mjg1Y2YyODIwNGQ1MGVjNGZiMDdkOGVmMzgyNTQ3YTEwMWQzYWQ0ZDM0MjFhMTVlM2VkZDliYmJhMWYwOWFhZjk0Njk0MTk0ZmM3ZGEyMzdmZTAwNDhiZmJlYTI5NGQyNGUxMzc2ODhiNWIyNzgxNjkyOTdiMTM5ZjA3M2UwOWM=
+        base64-secret: CBo/PjqlNbe0zsuD6Sg1xzbUOwt2O77uXR98/U7a9vCrxVUziB7h+SvFseej+FWbWkC+rpIeZN0F0ckqVWUyvA==
         # Token is valid 24 hours
         token-validity-in-seconds: 86400
         token-validity-in-seconds-for-remember-me: 2592000
   mail: # specific JHipster mail property, for standard properties see MailProperties
-    base-url: http://my-server-url-to-change # Modify according to your server's URL
+    base-url: http://fileshareapp.io.vn # Modify according to your server's URL
   logging:
     use-json-format: false # By default, logs are not in Json format
     logstash: # Forward logs to logstash over a socket, used by LoggingConfiguration

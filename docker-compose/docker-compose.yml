@@ -28,6 +28,8 @@ services:
     image: mysql:9.2.0
     volumes:
       - ./config/mysql:/etc/mysql/conf.d
+    ports:
+      - '3306:3306'
     environment:
       - MYSQL_ALLOW_EMPTY_PASSWORD=yes
       - MYSQL_DATABASE=fileshareappv1
@@ -41,6 +43,8 @@ services:
       retries: 10
   fileshareappv1-elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.13.4
+    ports:
+      - '9200:9200'
     environment:
       - ES_JAVA_OPTS=-Xms256m -Xmx256m
       - discovery.type=single-node
