@@ -48,7 +48,9 @@ spring:
         prepStmtCacheSqlLimit: 2048
         useServerPrepStmts: true
   elasticsearch:
-    uris: http://fileshareapp.io.vn/es
+    uris: http://fileshareappv1-elasticsearch:9200
+  #    connection:
+  #        path-prefix: /es
   #    uris: http://localhost:9200
   # Replace by 'prod, faker' to add the faker context and have sample data loaded in production
   liquibase:
