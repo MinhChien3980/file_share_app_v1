@@ -25,10 +25,8 @@ interface NotificationSearchRepositoryInternal {
 
     Page<Notification> search(Query query);
 
-    @Async
     void index(Notification entity);
 
-    @Async
     void deleteFromIndexById(Long id);
 }
 

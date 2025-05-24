@@ -25,10 +25,8 @@ interface CommentSearchRepositoryInternal {
 
     Page<Comment> search(Query query);
 
-    @Async
     void index(Comment entity);
 
-    @Async
     void deleteFromIndexById(Long id);
 }
 

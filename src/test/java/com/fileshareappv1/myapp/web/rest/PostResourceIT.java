@@ -144,11 +144,7 @@ class PostResourceIT {
             .locationLat(DEFAULT_LOCATION_LAT)
             .locationLong(DEFAULT_LOCATION_LONG)
             .privacy(DEFAULT_PRIVACY)
-            .scheduledAt(DEFAULT_SCHEDULED_AT)
-            .viewCount(DEFAULT_VIEW_COUNT)
-            .commentCount(DEFAULT_COMMENT_COUNT)
-            .shareCount(DEFAULT_SHARE_COUNT)
-            .reactionCount(DEFAULT_REACTION_COUNT);
+            .scheduledAt(DEFAULT_SCHEDULED_AT);
     }
 
     /**
@@ -166,11 +162,7 @@ class PostResourceIT {
             .locationLat(UPDATED_LOCATION_LAT)
             .locationLong(UPDATED_LOCATION_LONG)
             .privacy(UPDATED_PRIVACY)
-            .scheduledAt(UPDATED_SCHEDULED_AT)
-            .viewCount(UPDATED_VIEW_COUNT)
-            .commentCount(UPDATED_COMMENT_COUNT)
-            .shareCount(UPDATED_SHARE_COUNT)
-            .reactionCount(UPDATED_REACTION_COUNT);
+            .scheduledAt(UPDATED_SCHEDULED_AT);
     }
 
     @BeforeEach
@@ -305,90 +297,6 @@ class PostResourceIT {
 
     @Test
     @Transactional
-    void checkViewCountIsRequired() throws Exception {
-        long databaseSizeBeforeTest = getRepositoryCount();
-        int searchDatabaseSizeBefore = IterableUtil.sizeOf(postSearchRepository.findAll());
-        // set the field null
-        post.setViewCount(null);
-
-        // Create the Post, which fails.
-        PostDTO postDTO = postMapper.toDto(post);
-
-        restPostMockMvc
-            .perform(post(ENTITY_API_URL).contentType(MediaType.APPLICATION_JSON).content(om.writeValueAsBytes(postDTO)))
-            .andExpect(status().isBadRequest());
-
-        assertSameRepositoryCount(databaseSizeBeforeTest);
-
-        int searchDatabaseSizeAfter = IterableUtil.sizeOf(postSearchRepository.findAll());
-        assertThat(searchDatabaseSizeAfter).isEqualTo(searchDatabaseSizeBefore);
-    }
-
-    @Test
-    @Transactional
-    void checkCommentCountIsRequired() throws Exception {
-        long databaseSizeBeforeTest = getRepositoryCount();
-        int searchDatabaseSizeBefore = IterableUtil.sizeOf(postSearchRepository.findAll());
-        // set the field null
-        post.setCommentCount(null);
-
-        // Create the Post, which fails.
-        PostDTO postDTO = postMapper.toDto(post);
-
-        restPostMockMvc
-            .perform(post(ENTITY_API_URL).contentType(MediaType.APPLICATION_JSON).content(om.writeValueAsBytes(postDTO)))
-            .andExpect(status().isBadRequest());
-
-        assertSameRepositoryCount(databaseSizeBeforeTest);
-
-        int searchDatabaseSizeAfter = IterableUtil.sizeOf(postSearchRepository.findAll());
-        assertThat(searchDatabaseSizeAfter).isEqualTo(searchDatabaseSizeBefore);
-    }
-
-    @Test
-    @Transactional
-    void checkShareCountIsRequired() throws Exception {
-        long databaseSizeBeforeTest = getRepositoryCount();
-        int searchDatabaseSizeBefore = IterableUtil.sizeOf(postSearchRepository.findAll());
-        // set the field null
-        post.setShareCount(null);
-
-        // Create the Post, which fails.
-        PostDTO postDTO = postMapper.toDto(post);
-
-        restPostMockMvc
-            .perform(post(ENTITY_API_URL).contentType(MediaType.APPLICATION_JSON).content(om.writeValueAsBytes(postDTO)))
-            .andExpect(status().isBadRequest());
-
-        assertSameRepositoryCount(databaseSizeBeforeTest);
-
-        int searchDatabaseSizeAfter = IterableUtil.sizeOf(postSearchRepository.findAll());
-        assertThat(searchDatabaseSizeAfter).isEqualTo(searchDatabaseSizeBefore);
-    }
-
-    @Test
-    @Transactional
-    void checkReactionCountIsRequired() throws Exception {
-        long databaseSizeBeforeTest = getRepositoryCount();
-        int searchDatabaseSizeBefore = IterableUtil.sizeOf(postSearchRepository.findAll());
-        // set the field null
-        post.setReactionCount(null);
-
-        // Create the Post, which fails.
-        PostDTO postDTO = postMapper.toDto(post);
-
-        restPostMockMvc
-            .perform(post(ENTITY_API_URL).contentType(MediaType.APPLICATION_JSON).content(om.writeValueAsBytes(postDTO)))
-            .andExpect(status().isBadRequest());
-
-        assertSameRepositoryCount(databaseSizeBeforeTest);
-
-        int searchDatabaseSizeAfter = IterableUtil.sizeOf(postSearchRepository.findAll());
-        assertThat(searchDatabaseSizeAfter).isEqualTo(searchDatabaseSizeBefore);
-    }
-
-    @Test
-    @Transactional
     void getAllPosts() throws Exception {
         // Initialize the database
         insertedPost = postRepository.saveAndFlush(post);
@@ -485,11 +393,7 @@ class PostResourceIT {
             .locationLat(UPDATED_LOCATION_LAT)
             .locationLong(UPDATED_LOCATION_LONG)
             .privacy(UPDATED_PRIVACY)
-            .scheduledAt(UPDATED_SCHEDULED_AT)
-            .viewCount(UPDATED_VIEW_COUNT)
-            .commentCount(UPDATED_COMMENT_COUNT)
-            .shareCount(UPDATED_SHARE_COUNT)
-            .reactionCount(UPDATED_REACTION_COUNT);
+            .scheduledAt(UPDATED_SCHEDULED_AT);
         PostDTO postDTO = postMapper.toDto(updatedPost);
 
         restPostMockMvc
@@ -595,9 +499,7 @@ class PostResourceIT {
             .createdAt(UPDATED_CREATED_AT)
             .locationLat(UPDATED_LOCATION_LAT)
             .privacy(UPDATED_PRIVACY)
-            .scheduledAt(UPDATED_SCHEDULED_AT)
-            .shareCount(UPDATED_SHARE_COUNT);
-
+            .scheduledAt(UPDATED_SCHEDULED_AT);
         restPostMockMvc
             .perform(
                 patch(ENTITY_API_URL_ID, partialUpdatedPost.getId())
@@ -632,11 +534,7 @@ class PostResourceIT {
             .locationLat(UPDATED_LOCATION_LAT)
             .locationLong(UPDATED_LOCATION_LONG)
             .privacy(UPDATED_PRIVACY)
-            .scheduledAt(UPDATED_SCHEDULED_AT)
-            .viewCount(UPDATED_VIEW_COUNT)
-            .commentCount(UPDATED_COMMENT_COUNT)
-            .shareCount(UPDATED_SHARE_COUNT)
-            .reactionCount(UPDATED_REACTION_COUNT);
+            .scheduledAt(UPDATED_SCHEDULED_AT);
 
         restPostMockMvc
             .perform(

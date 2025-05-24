@@ -209,4 +209,22 @@ public class ShareResource {
             throw ElasticsearchExceptionMapper.mapException(e);
         }
     }
+
+    /**
+     * {@code GET  /shares/post/:postId} : get all the shares by post id.
+     *
+     * @param postId the id of the post.
+     * @param pageable the pagination information.
+     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the list of shares in body.
+     */
+    @GetMapping("/{postId}/shares")
+    public ResponseEntity<List<ShareDTO>> getAllSharesByPostId(
+        @PathVariable Long postId,
+        @org.springdoc.core.annotations.ParameterObject Pageable pageable
+    ) {
+        LOG.debug("REST request to get a page of Shares by post id");
+        Page<ShareDTO> page = shareService.findByPostId(postId, pageable);
+        HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
+        return ResponseEntity.ok().headers(headers).body(page.getContent());
+    }
 }

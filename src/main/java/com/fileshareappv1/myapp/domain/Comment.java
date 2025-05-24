@@ -5,6 +5,8 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import java.io.Serializable;
 import java.time.Instant;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 /**
  * A Comment.
@@ -13,6 +15,7 @@ import java.time.Instant;
 @Table(name = "comment")
 @org.springframework.data.elasticsearch.annotations.Document(indexName = "comment")
 @SuppressWarnings("common-java:DuplicatedBlocks")
+@EntityListeners(AuditingEntityListener.class)
 public class Comment implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -27,7 +30,7 @@ public class Comment implements Serializable {
     @org.springframework.data.elasticsearch.annotations.Field(type = org.springframework.data.elasticsearch.annotations.FieldType.Text)
     private String content;
 
-    @NotNull
+    @CreatedDate
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
 

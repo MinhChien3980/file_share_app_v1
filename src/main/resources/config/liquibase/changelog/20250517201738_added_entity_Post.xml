@@ -39,16 +39,16 @@
                 <constraints nullable="true" />
             </column>
             <column name="view_count" type="bigint">
-                <constraints nullable="false" />
+                <constraints nullable="true" />
             </column>
             <column name="comment_count" type="bigint">
-                <constraints nullable="false" />
+                <constraints nullable="true" />
             </column>
             <column name="share_count" type="bigint">
-                <constraints nullable="false" />
+                <constraints nullable="true" />
             </column>
             <column name="reaction_count" type="bigint">
-                <constraints nullable="false" />
+                <constraints nullable="true" />
             </column>
             <column name="user_id" type="bigint">
                 <constraints nullable="true" />

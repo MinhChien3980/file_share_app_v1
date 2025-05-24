@@ -9,6 +9,9 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.HashSet;
 import java.util.Set;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 /**
  * A Post.
@@ -17,6 +20,7 @@ import java.util.Set;
 @Table(name = "post")
 @org.springframework.data.elasticsearch.annotations.Document(indexName = "post")
 @SuppressWarnings("common-java:DuplicatedBlocks")
+@EntityListeners(AuditingEntityListener.class)
 public class Post implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -31,12 +35,12 @@ public class Post implements Serializable {
     @org.springframework.data.elasticsearch.annotations.Field(type = org.springframework.data.elasticsearch.annotations.FieldType.Text)
     private String content;
 
-    @NotNull
-    @Column(name = "created_at", nullable = false)
+    @CreatedDate
+    @Column(name = "created_at")
     private Instant createdAt;
 
-    @NotNull
-    @Column(name = "updated_at", nullable = false)
+    @LastModifiedDate
+    @Column(name = "updated_at")
     private Instant updatedAt;
 
     @Column(name = "location_name")
@@ -60,20 +64,16 @@ public class Post implements Serializable {
     @Column(name = "scheduled_at")
     private Instant scheduledAt;
 
-    @NotNull
-    @Column(name = "view_count", nullable = false)
+    @Column(name = "view_count")
     private Long viewCount;
 
-    @NotNull
-    @Column(name = "comment_count", nullable = false)
+    @Column(name = "comment_count")
     private Long commentCount;
 
-    @NotNull
-    @Column(name = "share_count", nullable = false)
+    @Column(name = "share_count")
     private Long shareCount;
 
-    @NotNull
-    @Column(name = "reaction_count", nullable = false)
+    @Column(name = "reaction_count")
     private Long reactionCount;
 
     @ManyToOne(fetch = FetchType.LAZY)

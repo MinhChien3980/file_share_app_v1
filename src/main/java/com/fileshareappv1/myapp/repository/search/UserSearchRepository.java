@@ -19,11 +19,9 @@ public interface UserSearchRepository extends ElasticsearchRepository<User, Long
 interface UserSearchRepositoryInternal {
     Stream<User> search(String query);
 
-    @Async
     @Transactional
     void index(User entity);
 
-    @Async
     @Transactional
     void deleteFromIndex(User entity);
 }

@@ -8,6 +8,7 @@ services:
       - SPRING_DATASOURCE_URL=jdbc:mysql://fileshareappv1-mysql:3306/fileshareappv1?useUnicode=true&characterEncoding=utf8&useSSL=false&useLegacyDatetimeCode=false&createDatabaseIfNotExist=true
       - SPRING_LIQUIBASE_URL=jdbc:mysql://fileshareappv1-mysql:3306/fileshareappv1?useUnicode=true&characterEncoding=utf8&useSSL=false&useLegacyDatetimeCode=false&createDatabaseIfNotExist=true
       - SPRING_ELASTICSEARCH_URIS=http://fileshareappv1-elasticsearch:9200
+      - APP_STORAGE_LOCATION=/data/uploads
     ports:
       - 8080:8080
     healthcheck:
@@ -24,6 +25,8 @@ services:
         condition: service_healthy
       fileshareappv1-elasticsearch:
         condition: service_healthy
+    volumes:
+      - ./uploads:/data/uploads
   fileshareappv1-mysql:
     image: mysql:9.2.0
     volumes:

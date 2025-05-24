@@ -133,4 +133,17 @@ public class FileService {
         LOG.debug("Request to search for a page of Files for query {}", query);
         return fileSearchRepository.search(query, pageable).map(fileMapper::toDto);
     }
+
+    /**
+     * Get all the files for a given Post.
+     *
+     * @param postId   the id of the post
+     * @param pageable pagination information
+     * @return page of FileDTOs
+     */
+    @Transactional(readOnly = true)
+    public Page<FileDTO> findAllByPostId(Long postId, Pageable pageable) {
+        LOG.debug("Request to get all Files for Post : {}", postId);
+        return fileRepository.findAllByPostId(postId, pageable).map(fileMapper::toDto);
+    }
 }

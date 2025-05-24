@@ -21,10 +21,8 @@ interface FavoriteSearchRepositoryInternal {
 
     Stream<Favorite> search(Query query);
 
-    @Async
     void index(Favorite entity);
 
-    @Async
     void deleteFromIndexById(Long id);
 }
 

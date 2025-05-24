@@ -209,4 +209,22 @@ public class ReactionResource {
             throw ElasticsearchExceptionMapper.mapException(e);
         }
     }
+
+    /**
+     * {@code GET  /reactions/post/:postId} : get all the reactions for a post.
+     *
+     * @param postId the id of the post to retrieve reactions for.
+     * @param pageable the pagination information.
+     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the list of reactions in body.
+     */
+    @GetMapping("/{postId}/reactions")
+    public ResponseEntity<List<ReactionDTO>> getAllReactionsByPostId(
+        @PathVariable Long postId,
+        @org.springdoc.core.annotations.ParameterObject Pageable pageable
+    ) {
+        LOG.debug("REST request to get a page of Reactions for post {}", postId);
+        Page<ReactionDTO> page = reactionService.findAllByPostId(postId, pageable);
+        HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
+        return ResponseEntity.ok().headers(headers).body(page.getContent());
+    }
 }

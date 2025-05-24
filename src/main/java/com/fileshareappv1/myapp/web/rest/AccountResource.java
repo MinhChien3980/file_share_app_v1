@@ -11,6 +11,7 @@ import com.fileshareappv1.myapp.web.rest.errors.*;
 import com.fileshareappv1.myapp.web.rest.vm.KeyAndPasswordVM;
 import com.fileshareappv1.myapp.web.rest.vm.ManagedUserVM;
 import jakarta.validation.Valid;
+import java.sql.Date;
 import java.util.*;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -100,7 +101,7 @@ public class AccountResource {
      * @throws RuntimeException {@code 500 (Internal Server Error)} if the user login wasn't found.
      */
     @PostMapping("/account")
-    public void saveAccount(@Valid @RequestBody AdminUserDTO userDTO) {
+    public Map<String, Object> saveAccount(@Valid @RequestBody AdminUserDTO userDTO) {
         String userLogin = SecurityUtils.getCurrentUserLogin()
             .orElseThrow(() -> new AccountResourceException("Current user login not found"));
         Optional<User> existingUser = userRepository.findOneByEmailIgnoreCase(userDTO.getEmail());
@@ -111,12 +112,15 @@ public class AccountResource {
         if (!user.isPresent()) {
             throw new AccountResourceException("User could not be found");
         }
-        userService.updateUser(
+        return userService.updateUser(
             userDTO.getFirstName(),
             userDTO.getLastName(),
             userDTO.getEmail(),
             userDTO.getLangKey(),
-            userDTO.getImageUrl()
+            userDTO.getImageUrl(),
+            userDTO.getPhoneNumber(),
+            userDTO.getAddress(),
+            userDTO.getDateOfBirth()
         );
     }
 

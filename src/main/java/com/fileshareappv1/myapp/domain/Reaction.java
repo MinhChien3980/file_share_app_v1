@@ -6,6 +6,8 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import java.io.Serializable;
 import java.time.Instant;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 /**
  * A Reaction.
@@ -14,6 +16,7 @@ import java.time.Instant;
 @Table(name = "reaction")
 @org.springframework.data.elasticsearch.annotations.Document(indexName = "reaction")
 @SuppressWarnings("common-java:DuplicatedBlocks")
+@EntityListeners(AuditingEntityListener.class)
 public class Reaction implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -29,7 +32,7 @@ public class Reaction implements Serializable {
     @org.springframework.data.elasticsearch.annotations.Field(type = org.springframework.data.elasticsearch.annotations.FieldType.Keyword)
     private ReactionType type;
 
-    @NotNull
+    @LastModifiedDate
     @Column(name = "reacted_at", nullable = false)
     private Instant reactedAt;
 

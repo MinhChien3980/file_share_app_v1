@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import java.io.Serializable;
 import java.time.Instant;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 /**
  * A Follow.
@@ -12,6 +14,7 @@ import java.time.Instant;
 @Table(name = "follow")
 @org.springframework.data.elasticsearch.annotations.Document(indexName = "follow")
 @SuppressWarnings("common-java:DuplicatedBlocks")
+@EntityListeners(AuditingEntityListener.class)
 public class Follow implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -21,7 +24,7 @@ public class Follow implements Serializable {
     @Column(name = "id")
     private Long id;
 
-    @NotNull
+    @CreatedDate
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
 

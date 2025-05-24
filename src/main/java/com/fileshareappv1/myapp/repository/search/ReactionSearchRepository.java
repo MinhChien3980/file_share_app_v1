@@ -25,10 +25,8 @@ interface ReactionSearchRepositoryInternal {
 
     Page<Reaction> search(Query query);
 
-    @Async
     void index(Reaction entity);
 
-    @Async
     void deleteFromIndexById(Long id);
 }
 

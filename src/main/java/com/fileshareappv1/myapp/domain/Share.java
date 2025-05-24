@@ -5,6 +5,8 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import java.io.Serializable;
 import java.time.Instant;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 /**
  * A Share.
@@ -13,6 +15,7 @@ import java.time.Instant;
 @Table(name = "share")
 @org.springframework.data.elasticsearch.annotations.Document(indexName = "share")
 @SuppressWarnings("common-java:DuplicatedBlocks")
+@EntityListeners(AuditingEntityListener.class)
 public class Share implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -22,7 +25,7 @@ public class Share implements Serializable {
     @Column(name = "id")
     private Long id;
 
-    @NotNull
+    @CreatedDate
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
 

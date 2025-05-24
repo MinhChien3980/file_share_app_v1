@@ -1,6 +1,7 @@
 package com.fileshareappv1.myapp.web.rest;
 
 import com.fileshareappv1.myapp.repository.PostRepository;
+import com.fileshareappv1.myapp.security.SecurityUtils;
 import com.fileshareappv1.myapp.service.PostService;
 import com.fileshareappv1.myapp.service.dto.PostDTO;
 import com.fileshareappv1.myapp.web.rest.errors.BadRequestAlertException;
@@ -207,6 +208,21 @@ public class PostResource {
             return ResponseEntity.ok().headers(headers).body(page.getContent());
         } catch (RuntimeException e) {
             throw ElasticsearchExceptionMapper.mapException(e);
+        }
+    }
+
+    /**
+     * GET  /posts/me : get a page of Posts of the currently logged in user.
+     */
+    @GetMapping("/me")
+    public ResponseEntity<List<PostDTO>> getMyPosts(@org.springdoc.core.annotations.ParameterObject Pageable pageable) {
+        try {
+            Page<PostDTO> page = postService.findMyPosts(pageable);
+            HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
+            return ResponseEntity.ok().headers(headers).body(page.getContent());
+        } catch (Exception e) {
+            LOG.error("Error occurred while fetching posts for user {}: {}", SecurityUtils.getCurrentUserLogin(), e.getMessage());
+            throw e;
         }
     }
 }

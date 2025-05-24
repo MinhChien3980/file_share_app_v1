@@ -3,13 +3,16 @@ package com.fileshareappv1.myapp.service;
 import com.fileshareappv1.myapp.domain.Reaction;
 import com.fileshareappv1.myapp.repository.ReactionRepository;
 import com.fileshareappv1.myapp.repository.search.ReactionSearchRepository;
+import com.fileshareappv1.myapp.service.dto.CommentDTO;
 import com.fileshareappv1.myapp.service.dto.ReactionDTO;
 import com.fileshareappv1.myapp.service.mapper.ReactionMapper;
+import java.util.List;
 import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -145,5 +148,11 @@ public class ReactionService {
     public Page<ReactionDTO> search(String query, Pageable pageable) {
         LOG.debug("Request to search for a page of Reactions for query {}", query);
         return reactionSearchRepository.search(query, pageable).map(reactionMapper::toDto);
+    }
+
+    //    find all reaction of a post
+    public Page<ReactionDTO> findAllByPostId(Long postId, Pageable pageable) {
+        LOG.debug("Request to get all Reactions");
+        return reactionRepository.findAllByPostId(postId, pageable).map(reactionMapper::toDto);
     }
 }

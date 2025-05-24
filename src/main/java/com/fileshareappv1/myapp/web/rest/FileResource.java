@@ -3,23 +3,32 @@ package com.fileshareappv1.myapp.web.rest;
 import com.fileshareappv1.myapp.repository.FileRepository;
 import com.fileshareappv1.myapp.service.FileService;
 import com.fileshareappv1.myapp.service.dto.FileDTO;
+import com.fileshareappv1.myapp.service.storage.StorageService;
 import com.fileshareappv1.myapp.web.rest.errors.BadRequestAlertException;
 import com.fileshareappv1.myapp.web.rest.errors.ElasticsearchExceptionMapper;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
+import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import tech.jhipster.web.util.HeaderUtil;
 import tech.jhipster.web.util.PaginationUtil;
@@ -43,9 +52,12 @@ public class FileResource {
 
     private final FileRepository fileRepository;
 
-    public FileResource(FileService fileService, FileRepository fileRepository) {
+    private final StorageService storageService;
+
+    public FileResource(FileService fileService, FileRepository fileRepository, StorageService storageService) {
         this.fileService = fileService;
         this.fileRepository = fileRepository;
+        this.storageService = storageService;
     }
 
     /**
@@ -199,5 +211,85 @@ public class FileResource {
         } catch (RuntimeException e) {
             throw ElasticsearchExceptionMapper.mapException(e);
         }
+    }
+
+    @PostMapping("/upload")
+    public ResponseEntity<FileDTO> uploadFile(@RequestParam("file") MultipartFile file) throws URISyntaxException {
+        String storedFilename = storageService.store(file);
+
+        FileDTO dto = new FileDTO();
+        dto.setFileName(file.getOriginalFilename());
+        dto.setMimeType(Optional.ofNullable(file.getContentType()).orElse(MediaType.APPLICATION_OCTET_STREAM_VALUE));
+        dto.setFileSize(file.getSize());
+        dto.setUploadedAt(Instant.now());
+        dto.setFileUrl(
+            ServletUriComponentsBuilder.fromCurrentContextPath().path("/api/files/download/").path(storedFilename).toUriString()
+        );
+        // (if you have a postId to associate: dto.setPost(somePostDto); )
+
+        FileDTO result = fileService.save(dto);
+
+        return ResponseEntity.created(new URI("/api/files/" + result.getId())).body(result);
+    }
+
+    @GetMapping("/download/{filename:.+}")
+    public ResponseEntity<Resource> downloadFile(@PathVariable String filename, HttpServletRequest request) {
+        Resource resource = storageService.loadAsResource(filename);
+
+        String contentType;
+        try {
+            String absolutePath = resource.getFile().getAbsolutePath();
+            contentType = request.getServletContext().getMimeType(absolutePath);
+            if (contentType == null) {
+                contentType = Files.probeContentType(Path.of(absolutePath));
+            }
+        } catch (IOException e) {
+            contentType = MediaType.APPLICATION_OCTET_STREAM_VALUE;
+        }
+
+        return ResponseEntity.ok()
+            .contentType(MediaType.parseMediaType(contentType))
+            .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + resource.getFilename() + "\"")
+            .body(resource);
+    }
+
+    /**
+     * POST /api/files/upload-multiple
+     * Accepts N files under the form‐field “files” and returns
+     * a JSON array of saved FileDTOs (id, filename, mimeType, url, …).
+     */
+    @PostMapping("/upload-multiple")
+    public ResponseEntity<List<FileDTO>> uploadMultipleFiles(@RequestParam("files") List<MultipartFile> files) throws URISyntaxException {
+        List<FileDTO> saved = files
+            .stream()
+            .map(file -> {
+                String storedName = storageService.store(file);
+                FileDTO dto = new FileDTO();
+                dto.setFileName(file.getOriginalFilename());
+                dto.setMimeType(Optional.ofNullable(file.getContentType()).orElse(MediaType.APPLICATION_OCTET_STREAM_VALUE));
+                dto.setFileSize(file.getSize());
+                dto.setUploadedAt(Instant.now());
+                dto.setFileUrl(
+                    ServletUriComponentsBuilder.fromCurrentContextPath().path("/api/files/download/").path(storedName).toUriString()
+                );
+                return fileService.save(dto);
+            })
+            .toList();
+
+        return ResponseEntity.created(new URI("/api/files/upload-multiple")).body(saved);
+    }
+
+    /**
+     * GET  /{postId}/files : get a page of FileDTOs for a given Post.
+     */
+    @GetMapping("/{postId}/files")
+    public ResponseEntity<List<FileDTO>> getFilesByPostId(
+        @PathVariable Long postId,
+        @org.springdoc.core.annotations.ParameterObject Pageable pageable
+    ) {
+        LOG.debug("REST request to get Files by Post : {}", postId);
+        Page<FileDTO> page = fileService.findAllByPostId(postId, pageable);
+        HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
+        return ResponseEntity.ok().headers(headers).body(page.getContent());
     }
 }

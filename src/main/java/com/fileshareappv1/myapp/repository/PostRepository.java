@@ -40,4 +40,7 @@ public interface PostRepository extends PostRepositoryWithBagRelationships, JpaR
 
     @Query("select post from Post post left join fetch post.user where post.id =:id")
     Optional<Post> findOneWithToOneRelationships(@Param("id") Long id);
+
+    @Query("select post from Post post where post.user.login = ?#{authentication.name}")
+    Page<Post> findByCurrentUser(Pageable pageable);
 }

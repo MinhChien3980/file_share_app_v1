@@ -5,6 +5,8 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import java.io.Serializable;
 import java.time.Instant;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 /**
  * A File.
@@ -13,6 +15,7 @@ import java.time.Instant;
 @Table(name = "file")
 @org.springframework.data.elasticsearch.annotations.Document(indexName = "file")
 @SuppressWarnings("common-java:DuplicatedBlocks")
+@EntityListeners(AuditingEntityListener.class)
 public class File implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -42,7 +45,7 @@ public class File implements Serializable {
     @Column(name = "file_size", nullable = false)
     private Long fileSize;
 
-    @NotNull
+    @LastModifiedDate
     @Column(name = "uploaded_at", nullable = false)
     private Instant uploadedAt;
 

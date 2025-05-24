@@ -9,6 +9,8 @@ import java.time.Instant;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
 
 /**
  * A DTO for the {@link com.fileshareappv1.myapp.domain.Post} entity.
@@ -21,10 +23,10 @@ public class PostDTO implements Serializable {
     @Lob
     private String content;
 
-    @NotNull
+    @CreatedDate
     private Instant createdAt;
 
-    @NotNull
+    @LastModifiedDate
     private Instant updatedAt;
 
     private String locationName;
@@ -40,16 +42,12 @@ public class PostDTO implements Serializable {
 
     private Instant scheduledAt;
 
-    @NotNull
     private Long viewCount;
 
-    @NotNull
     private Long commentCount;
 
-    @NotNull
     private Long shareCount;
 
-    @NotNull
     private Long reactionCount;
 
     private UserDTO user;

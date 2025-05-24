@@ -25,10 +25,8 @@ interface PostSearchRepositoryInternal {
 
     Page<Post> search(Query query);
 
-    @Async
     void index(Post entity);
 
-    @Async
     void deleteFromIndexById(Long id);
 }
 

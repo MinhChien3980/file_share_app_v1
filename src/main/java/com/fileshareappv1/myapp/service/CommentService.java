@@ -146,4 +146,10 @@ public class CommentService {
         LOG.debug("Request to search for a page of Comments for query {}", query);
         return commentSearchRepository.search(query, pageable).map(commentMapper::toDto);
     }
+
+    //    find all comment by post id
+    public Page<CommentDTO> findAllByPostId(Long postId, Pageable pageable) {
+        LOG.debug("Request to get all Comments by post id");
+        return commentRepository.findAllByPostId(postId, pageable).map(commentMapper::toDto);
+    }
 }

@@ -25,10 +25,8 @@ interface MentionSearchRepositoryInternal {
 
     Page<Mention> search(Query query);
 
-    @Async
     void index(Mention entity);
 
-    @Async
     void deleteFromIndexById(Long id);
 }
 

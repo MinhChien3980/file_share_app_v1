@@ -25,10 +25,8 @@ interface FollowSearchRepositoryInternal {
 
     Page<Follow> search(Query query);
 
-    @Async
     void index(Follow entity);
 
-    @Async
     void deleteFromIndexById(Long id);
 }
 

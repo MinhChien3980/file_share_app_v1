@@ -25,10 +25,8 @@ interface ShareSearchRepositoryInternal {
 
     Page<Share> search(Query query);
 
-    @Async
     void index(Share entity);
 
-    @Async
     void deleteFromIndexById(Long id);
 }
 

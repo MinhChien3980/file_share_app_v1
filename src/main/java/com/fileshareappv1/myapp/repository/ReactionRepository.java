@@ -1,6 +1,7 @@
 package com.fileshareappv1.myapp.repository;
 
 import com.fileshareappv1.myapp.domain.Reaction;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.domain.Page;
@@ -40,4 +41,6 @@ public interface ReactionRepository extends JpaRepository<Reaction, Long> {
 
     @Query("select reaction from Reaction reaction left join fetch reaction.user where reaction.id =:id")
     Optional<Reaction> findOneWithToOneRelationships(@Param("id") Long id);
+
+    Page<Reaction> findAllByPostId(Long postId, Pageable pageable);
 }

@@ -19,6 +19,8 @@ logging:
     tech.jhipster: INFO
     org.hibernate.SQL: DEBUG
     com.fileshareappv1.myapp: INFO
+    com.fileshareappv1: DEBUG
+    org.springframework.web: DEBUG
 
 management:
   prometheus:
@@ -46,10 +48,11 @@ spring:
         prepStmtCacheSqlLimit: 2048
         useServerPrepStmts: true
   elasticsearch:
-    uris: http://fileshareapp.io.vn:9200
+    #    uris: http://fileshareapp.io.vn:9200
+    uris: http://localhost:9200
   # Replace by 'prod, faker' to add the faker context and have sample data loaded in production
   liquibase:
-    contexts: prod
+    contexts: prod, faker
   mail:
     host: smtp.gmail.com
     port: 587

@@ -25,10 +25,8 @@ interface FileSearchRepositoryInternal {
 
     Page<File> search(Query query);
 
-    @Async
     void index(File entity);
 
-    @Async
     void deleteFromIndexById(Long id);
 }
 

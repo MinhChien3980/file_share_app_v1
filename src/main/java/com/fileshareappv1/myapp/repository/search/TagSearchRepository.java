@@ -25,10 +25,8 @@ interface TagSearchRepositoryInternal {
 
     Page<Tag> search(Query query);
 
-    @Async
     void index(Tag entity);
 
-    @Async
     void deleteFromIndexById(Long id);
 }
 

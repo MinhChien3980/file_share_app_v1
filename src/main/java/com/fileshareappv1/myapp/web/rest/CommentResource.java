@@ -209,4 +209,22 @@ public class CommentResource {
             throw ElasticsearchExceptionMapper.mapException(e);
         }
     }
+
+    /**
+     * {@code GET  /comments/post/:postId} : get all the comments by post id.
+     *
+     * @param postId the id of the post.
+     * @param pageable the pagination information.
+     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the list of comments in body.
+     */
+    @GetMapping("/{postId}/comments")
+    public ResponseEntity<List<CommentDTO>> getAllCommentsByPostId(
+        @PathVariable Long postId,
+        @org.springdoc.core.annotations.ParameterObject Pageable pageable
+    ) {
+        LOG.debug("REST request to get a page of Comments by post id");
+        Page<CommentDTO> page = commentService.findAllByPostId(postId, pageable);
+        HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
+        return ResponseEntity.ok().headers(headers).body(page.getContent());
+    }
 }

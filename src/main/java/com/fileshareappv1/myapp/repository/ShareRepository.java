@@ -37,4 +37,6 @@ public interface ShareRepository extends JpaRepository<Share, Long> {
 
     @Query("select share from Share share left join fetch share.user where share.id =:id")
     Optional<Share> findOneWithToOneRelationships(@Param("id") Long id);
+
+    Page<Share> findByPostId(Long postId, Pageable pageable);
 }

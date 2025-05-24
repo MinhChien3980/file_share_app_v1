@@ -10,9 +10,14 @@ import com.fileshareappv1.myapp.security.AuthoritiesConstants;
 import com.fileshareappv1.myapp.security.SecurityUtils;
 import com.fileshareappv1.myapp.service.dto.AdminUserDTO;
 import com.fileshareappv1.myapp.service.dto.UserDTO;
+import java.sql.Date;
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -197,6 +202,10 @@ public class UserService {
                 user.setImageUrl(userDTO.getImageUrl());
                 user.setActivated(userDTO.isActivated());
                 user.setLangKey(userDTO.getLangKey());
+                user.setPhoneNumber(userDTO.getPhoneNumber());
+                user.setAddress(userDTO.getAddress());
+                user.setDateOfBirth(userDTO.getDateOfBirth());
+                user.setFirebaseUid(userDTO.getFirebaseUid() == null ? null : userDTO.getFirebaseUid());
                 Set<Authority> managedAuthorities = user.getAuthorities();
                 managedAuthorities.clear();
                 userDTO
@@ -232,22 +241,68 @@ public class UserService {
      * @param email     email id of user.
      * @param langKey   language key.
      * @param imageUrl  image URL of user.
+     * @param phoneNumber phone number of user.
+     * @param address   address of user.
+     * @param dateOfBirth date of birth of user.
      */
-    public void updateUser(String firstName, String lastName, String email, String langKey, String imageUrl) {
+    public Map<String, Object> updateUser(
+        String firstName,
+        String lastName,
+        String email,
+        String langKey,
+        String imageUrl,
+        String phoneNumber,
+        String address,
+        LocalDate dateOfBirth
+    ) {
+        Map<String, Object> changedFields = new HashMap<>();
+
         SecurityUtils.getCurrentUserLogin()
             .flatMap(userRepository::findOneByLogin)
             .ifPresent(user -> {
-                user.setFirstName(firstName);
-                user.setLastName(lastName);
-                if (email != null) {
-                    user.setEmail(email.toLowerCase());
+                updateIfChanged("firstName", firstName, user::getFirstName, user::setFirstName, changedFields);
+                updateIfChanged("lastName", lastName, user::getLastName, user::setLastName, changedFields);
+
+                if (email != null && !email.equalsIgnoreCase(user.getEmail())) {
+                    String lower = email.toLowerCase();
+                    user.setEmail(lower);
+                    changedFields.put("email", lower);
                 }
-                user.setLangKey(langKey);
-                user.setImageUrl(imageUrl);
-                userRepository.save(user);
-                userSearchRepository.index(user);
-                LOG.debug("Changed Information for User: {}", user);
+
+                updateIfChanged("langKey", langKey, user::getLangKey, user::setLangKey, changedFields);
+                updateIfChanged("imageUrl", imageUrl, user::getImageUrl, user::setImageUrl, changedFields);
+                updateIfChanged("phoneNumber", phoneNumber, user::getPhoneNumber, user::setPhoneNumber, changedFields);
+                updateIfChanged("address", address, user::getAddress, user::setAddress, changedFields);
+                updateIfChanged("dateOfBirth", dateOfBirth, user::getDateOfBirth, user::setDateOfBirth, changedFields);
+
+                if (!changedFields.isEmpty()) {
+                    String currentLogin = SecurityUtils.getCurrentUserLogin().orElse(null);
+                    user.setLastModifiedBy(currentLogin);
+                    user.setLastModifiedDate(Instant.now());
+                    userRepository.save(user);
+                    userSearchRepository.index(user);
+                    LOG.debug("Changed Information for User: {}", user);
+                }
             });
+
+        return changedFields;
+    }
+
+    /**
+     * Generic helper.
+     */
+    private <T> void updateIfChanged(
+        String fieldName,
+        T newValue,
+        Supplier<T> oldValueSupplier,
+        Consumer<T> setter,
+        Map<String, Object> changedFields
+    ) {
+        T oldValue = oldValueSupplier.get();
+        if (newValue != null && !newValue.equals(oldValue)) {
+            setter.accept(newValue);
+            changedFields.put(fieldName, newValue);
+        }
     }
 
     @Transactional

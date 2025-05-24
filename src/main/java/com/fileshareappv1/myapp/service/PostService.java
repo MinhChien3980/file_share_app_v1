@@ -1,10 +1,12 @@
 package com.fileshareappv1.myapp.service;
 
+import co.elastic.clients.util.DateTime;
 import com.fileshareappv1.myapp.domain.Post;
 import com.fileshareappv1.myapp.repository.PostRepository;
 import com.fileshareappv1.myapp.repository.search.PostSearchRepository;
 import com.fileshareappv1.myapp.service.dto.PostDTO;
 import com.fileshareappv1.myapp.service.mapper.PostMapper;
+import java.time.Instant;
 import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -141,5 +143,10 @@ public class PostService {
     public Page<PostDTO> search(String query, Pageable pageable) {
         LOG.debug("Request to search for a page of Posts for query {}", query);
         return postSearchRepository.search(query, pageable).map(postMapper::toDto);
+    }
+
+    public Page<PostDTO> findMyPosts(Pageable pageable) {
+        LOG.debug("Request to get all Posts");
+        return postRepository.findByCurrentUser(pageable).map(postMapper::toDto);
     }
 }

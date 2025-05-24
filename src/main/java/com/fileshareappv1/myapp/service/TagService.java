@@ -10,11 +10,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.elasticsearch.client.elc.ElasticsearchTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Service Implementation for managing {@link com.fileshareappv1.myapp.domain.Tag}.
+ * Service Implementation for managing {@link Tag}.
  */
 @Service
 @Transactional
@@ -27,11 +28,18 @@ public class TagService {
     private final TagMapper tagMapper;
 
     private final TagSearchRepository tagSearchRepository;
+    private final ElasticsearchTemplate elasticsearchOperations;
 
-    public TagService(TagRepository tagRepository, TagMapper tagMapper, TagSearchRepository tagSearchRepository) {
+    public TagService(
+        TagRepository tagRepository,
+        TagMapper tagMapper,
+        TagSearchRepository tagSearchRepository,
+        ElasticsearchTemplate elasticsearchOperations
+    ) {
         this.tagRepository = tagRepository;
         this.tagMapper = tagMapper;
         this.tagSearchRepository = tagSearchRepository;
+        this.elasticsearchOperations = elasticsearchOperations;
     }
 
     /**
@@ -45,6 +53,7 @@ public class TagService {
         Tag tag = tagMapper.toEntity(tagDTO);
         tag = tagRepository.save(tag);
         tagSearchRepository.index(tag);
+        elasticsearchOperations.indexOps(Tag.class).refresh();
         return tagMapper.toDto(tag);
     }
 

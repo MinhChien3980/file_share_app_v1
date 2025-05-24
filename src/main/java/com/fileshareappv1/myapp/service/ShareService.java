@@ -142,4 +142,9 @@ public class ShareService {
         LOG.debug("Request to search for a page of Shares for query {}", query);
         return shareSearchRepository.search(query, pageable).map(shareMapper::toDto);
     }
+
+    public Page<ShareDTO> findByPostId(Long postId, Pageable pageable) {
+        LOG.debug("Request to get all Shares by postId");
+        return shareRepository.findByPostId(postId, pageable).map(shareMapper::toDto);
+    }
 }
