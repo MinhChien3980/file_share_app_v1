@@ -15,6 +15,7 @@ import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import tech.jhipster.web.util.HeaderUtil;
@@ -186,5 +187,16 @@ public class FavoriteResource {
         } catch (RuntimeException e) {
             throw ElasticsearchExceptionMapper.mapException(e);
         }
+    }
+
+    /**
+     * {@code GET  /favorites/by-current-user} : get all the favorites by current user.
+     *
+     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the list of favorites in body.
+     */
+    @GetMapping("/by-current-user")
+    public ResponseEntity<List<FavoriteDTO>> getAllFavoritesByCurrentUser(Pageable pageable) {
+        LOG.debug("REST request to get all Favorites by current user");
+        return ResponseEntity.ok().body(favoriteService.findAllByCurrentUser(pageable).getContent());
     }
 }

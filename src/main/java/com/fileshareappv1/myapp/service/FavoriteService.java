@@ -152,4 +152,9 @@ public class FavoriteService {
             throw e;
         }
     }
+
+    public Page<FavoriteDTO> findAllByCurrentUser(Pageable pageable) {
+        LOG.debug("Request to get all Favorites by current user");
+        return favoriteRepository.findAllByCurrentUser(pageable).map(favoriteMapper::toDto);
+    }
 }

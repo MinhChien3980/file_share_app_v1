@@ -40,4 +40,7 @@ public interface FavoriteRepository extends JpaRepository<Favorite, Long> {
 
     @Query("select favorite from Favorite favorite left join fetch favorite.user where favorite.id =:id")
     Optional<Favorite> findOneWithToOneRelationships(@Param("id") Long id);
+
+    @Query("select favorite from Favorite favorite where favorite.user.login = ?#{authentication.name}")
+    Page<Favorite> findAllByCurrentUser(Pageable pageable);
 }
