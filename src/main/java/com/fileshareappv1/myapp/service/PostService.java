@@ -6,7 +6,9 @@ import com.fileshareappv1.myapp.repository.PostRepository;
 import com.fileshareappv1.myapp.repository.search.PostSearchRepository;
 import com.fileshareappv1.myapp.service.dto.PostDTO;
 import com.fileshareappv1.myapp.service.mapper.PostMapper;
+import jakarta.persistence.EntityNotFoundException;
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -148,5 +150,13 @@ public class PostService {
     public Page<PostDTO> findMyPosts(Pageable pageable) {
         LOG.debug("Request to get all Posts");
         return postRepository.findByCurrentUser(pageable).map(postMapper::toDto);
+    }
+
+    @Transactional
+    public Post addFiles(Long postId, List<String> storedNames) {
+        Post post = postRepository.findById(postId).orElseThrow(() -> new EntityNotFoundException("Post không tồn tại: " + postId));
+        post.getFiles().addAll(storedNames);
+        post.setNumFiles(post.getFiles().size());
+        return postRepository.save(post);
     }
 }

@@ -6,9 +6,7 @@ import jakarta.validation.constraints.*;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.Instant;
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 
@@ -53,6 +51,10 @@ public class PostDTO implements Serializable {
     private UserDTO user;
 
     private Set<TagDTO> tags = new HashSet<>();
+
+    private List<String> files = new ArrayList<>();
+
+    private Integer numFiles = 0;
 
     public Long getId() {
         return id;
@@ -215,5 +217,21 @@ public class PostDTO implements Serializable {
             ", user=" + getUser() +
             ", tags=" + getTags() +
             "}";
+    }
+
+    public List<String> getFiles() {
+        return files;
+    }
+
+    public void setFiles(List<String> files) {
+        this.files = files;
+    }
+
+    public Integer getNumFiles() {
+        return numFiles;
+    }
+
+    public void setNumFiles(Integer numFiles) {
+        this.numFiles = numFiles;
     }
 }

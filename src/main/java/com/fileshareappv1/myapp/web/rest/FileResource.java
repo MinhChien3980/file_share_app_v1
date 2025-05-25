@@ -1,12 +1,18 @@
 package com.fileshareappv1.myapp.web.rest;
 
+import com.fileshareappv1.myapp.domain.File;
+import com.fileshareappv1.myapp.domain.Post;
 import com.fileshareappv1.myapp.repository.FileRepository;
+import com.fileshareappv1.myapp.repository.PostRepository;
 import com.fileshareappv1.myapp.service.FileService;
 import com.fileshareappv1.myapp.service.dto.FileDTO;
+import com.fileshareappv1.myapp.service.dto.PostDTO;
 import com.fileshareappv1.myapp.service.storage.StorageService;
 import com.fileshareappv1.myapp.web.rest.errors.BadRequestAlertException;
 import com.fileshareappv1.myapp.web.rest.errors.ElasticsearchExceptionMapper;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import java.io.IOException;
@@ -15,15 +21,18 @@ import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.repository.reactive.ReactiveCrudRepository;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -35,7 +44,7 @@ import tech.jhipster.web.util.PaginationUtil;
 import tech.jhipster.web.util.ResponseUtil;
 
 /**
- * REST controller for managing {@link com.fileshareappv1.myapp.domain.File}.
+ * REST controller for managing {@link File}.
  */
 @RestController
 @RequestMapping("/api/files")
@@ -53,11 +62,18 @@ public class FileResource {
     private final FileRepository fileRepository;
 
     private final StorageService storageService;
+    private final PostRepository postRepository;
 
-    public FileResource(FileService fileService, FileRepository fileRepository, StorageService storageService) {
+    public FileResource(
+        FileService fileService,
+        FileRepository fileRepository,
+        StorageService storageService,
+        PostRepository postRepository
+    ) {
         this.fileService = fileService;
         this.fileRepository = fileRepository;
         this.storageService = storageService;
+        this.postRepository = postRepository;
     }
 
     /**
@@ -155,7 +171,7 @@ public class FileResource {
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the list of files in body.
      */
     @GetMapping("")
-    public ResponseEntity<List<FileDTO>> getAllFiles(@org.springdoc.core.annotations.ParameterObject Pageable pageable) {
+    public ResponseEntity<List<FileDTO>> getAllFiles(@ParameterObject Pageable pageable) {
         LOG.debug("REST request to get a page of Files");
         Page<FileDTO> page = fileService.findAll(pageable);
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
@@ -199,10 +215,7 @@ public class FileResource {
      * @return the result of the search.
      */
     @GetMapping("/_search")
-    public ResponseEntity<List<FileDTO>> searchFiles(
-        @RequestParam("query") String query,
-        @org.springdoc.core.annotations.ParameterObject Pageable pageable
-    ) {
+    public ResponseEntity<List<FileDTO>> searchFiles(@RequestParam("query") String query, @ParameterObject Pageable pageable) {
         LOG.debug("REST request to search for a page of Files for query {}", query);
         try {
             Page<FileDTO> page = fileService.search(query, pageable);
@@ -259,34 +272,48 @@ public class FileResource {
      * a JSON array of saved FileDTOs (id, filename, mimeType, url, …).
      */
     @PostMapping("/upload-multiple")
-    public ResponseEntity<List<FileDTO>> uploadMultipleFiles(@RequestParam("files") List<MultipartFile> files) throws URISyntaxException {
-        List<FileDTO> saved = files
-            .stream()
-            .map(file -> {
-                String storedName = storageService.store(file);
-                FileDTO dto = new FileDTO();
-                dto.setFileName(file.getOriginalFilename());
-                dto.setMimeType(Optional.ofNullable(file.getContentType()).orElse(MediaType.APPLICATION_OCTET_STREAM_VALUE));
-                dto.setFileSize(file.getSize());
-                dto.setUploadedAt(Instant.now());
-                dto.setFileUrl(
-                    ServletUriComponentsBuilder.fromCurrentContextPath().path("/api/files/download/").path(storedName).toUriString()
-                );
-                return fileService.save(dto);
-            })
-            .toList();
+    public ResponseEntity<List<FileDTO>> uploadMultipleFiles(
+        @RequestParam("files") List<MultipartFile> files,
+        @RequestParam("postId") Long postId
+    ) throws URISyntaxException {
+        // 1. Store tất cả file, thu về list tên (UUID.ext)
+        List<String> storedNames = files.stream().map(storageService::store).toList();
 
-        return ResponseEntity.created(new URI("/api/files/upload-multiple")).body(saved);
+        // 2. Cập nhật Post chỉ một lần
+        Post post = postRepository.findById(postId).orElseThrow(() -> new EntityNotFoundException("Post không tồn tại: " + postId));
+
+        // files đã luôn non-null vì khởi tạo mặc định ở entity
+        post.setFiles(storedNames);
+
+        // Đếm số file, gán vào numFiles
+        post.setNumFiles(post.getFiles().size());
+
+        postRepository.save(post);
+
+        // 3. Tạo và lưu FileDTO cho từng storedName
+        List<FileDTO> savedDTOs = new ArrayList<>();
+        for (int i = 0; i < storedNames.size(); i++) {
+            String name = storedNames.get(i);
+            MultipartFile original = files.get(i);
+
+            FileDTO dto = new FileDTO();
+            dto.setFileName(name);
+            dto.setMimeType(Optional.ofNullable(original.getContentType()).orElse(MediaType.APPLICATION_OCTET_STREAM_VALUE));
+            dto.setFileSize(original.getSize());
+            dto.setUploadedAt(Instant.now());
+            dto.setFileUrl(ServletUriComponentsBuilder.fromCurrentContextPath().path("/api/files/download/").path(name).toUriString());
+
+            savedDTOs.add(fileService.save(dto));
+        }
+
+        return ResponseEntity.created(new URI("/api/files/upload-multiple")).body(savedDTOs);
     }
 
     /**
      * GET  /{postId}/files : get a page of FileDTOs for a given Post.
      */
     @GetMapping("/{postId}/files")
-    public ResponseEntity<List<FileDTO>> getFilesByPostId(
-        @PathVariable Long postId,
-        @org.springdoc.core.annotations.ParameterObject Pageable pageable
-    ) {
+    public ResponseEntity<List<FileDTO>> getFilesByPostId(@PathVariable Long postId, @ParameterObject Pageable pageable) {
         LOG.debug("REST request to get Files by Post : {}", postId);
         Page<FileDTO> page = fileService.findAllByPostId(postId, pageable);
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);

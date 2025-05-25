@@ -7,7 +7,9 @@ import jakarta.validation.constraints.*;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
@@ -83,6 +85,13 @@ public class Post implements Serializable {
     @JoinTable(name = "rel_post__tags", joinColumns = @JoinColumn(name = "post_id"), inverseJoinColumns = @JoinColumn(name = "tags_id"))
     @JsonIgnoreProperties(value = { "posts" }, allowSetters = true)
     private Set<Tag> tags = new HashSet<>();
+
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "post_files", joinColumns = @JoinColumn(name = "post_id"))
+    @Column(name = "file_name")
+    private List<String> files = new ArrayList<>();
+
+    private Integer numFiles = 0;
 
     // jhipster-needle-entity-add-field - JHipster will add fields here
 
@@ -328,5 +337,21 @@ public class Post implements Serializable {
             ", shareCount=" + getShareCount() +
             ", reactionCount=" + getReactionCount() +
             "}";
+    }
+
+    public List<String> getFiles() {
+        return files;
+    }
+
+    public void setFiles(List<String> files) {
+        this.files = files;
+    }
+
+    public Integer getNumFiles() {
+        return numFiles;
+    }
+
+    public void setNumFiles(Integer numFiles) {
+        this.numFiles = numFiles;
     }
 }
