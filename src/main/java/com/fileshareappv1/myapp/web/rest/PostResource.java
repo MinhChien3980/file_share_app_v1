@@ -10,6 +10,7 @@ import com.fileshareappv1.myapp.service.PostService;
 import com.fileshareappv1.myapp.service.dto.PostDTO;
 import com.fileshareappv1.myapp.service.dto.TagDTO;
 import com.fileshareappv1.myapp.service.dto.UserDTO;
+import com.fileshareappv1.myapp.service.mapper.TagMapper;
 import com.fileshareappv1.myapp.web.rest.errors.BadRequestAlertException;
 import com.fileshareappv1.myapp.web.rest.errors.ElasticsearchExceptionMapper;
 import com.fileshareappv1.myapp.web.rest.form.PostForm;
@@ -56,16 +57,20 @@ public class PostResource {
 
     private final TagRepository tagRepository;
 
+    private final TagMapper tagMapper;
+
     public PostResource(
         PostService postService,
         PostRepository postRepository,
         UserRepository userRepository,
-        TagRepository tagRepository
+        TagRepository tagRepository,
+        TagMapper tagMapper
     ) {
         this.postService = postService;
         this.postRepository = postRepository;
         this.userRepository = userRepository;
         this.tagRepository = tagRepository;
+        this.tagMapper = tagMapper;
     }
 
     /**
@@ -245,32 +250,24 @@ public class PostResource {
         }
     }
 
-    @PostMapping(value = "", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping(value = "with-files", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<PostDTO> createPostWithFiles(@Valid @ModelAttribute PostForm form) throws URISyntaxException {
-        // 1. Build PostDTO từ form (không set user, tags ở đây)
         PostDTO dto = new PostDTO();
         dto.setContent(form.getContent());
         dto.setPrivacy(form.getPrivacy());
-        // 2. Lấy User hiện tại từ Security
+        dto.setLocationName(form.getLocationName());
         String login = SecurityUtils.getCurrentUserLogin().orElseThrow(() -> new RuntimeException("User chưa login"));
         User user = userRepository.findOneByLogin(login).orElseThrow(() -> new RuntimeException("User không tồn tại"));
         dto.setUser(new UserDTO(user));
 
-        // 3. Lấy Tag entities từ tagIds
-        Set<Tag> tags = new HashSet<>(tagRepository.findAllById(form.getTagIds()));
-        dto.setTags(
-            tags
-                .stream()
-                .map(tag -> {
-                    var t = new TagDTO();
-                    t.setId(tag.getId());
-                    t.setName(tag.getName());
-                    return t;
-                })
-                .collect(Collectors.toSet())
-        );
+        Set<TagDTO> tagDTOs = form
+            .getTagIds()
+            .stream()
+            .flatMap(id -> tagRepository.findById(id).stream())
+            .map(tagMapper::toDto)
+            .collect(Collectors.toSet());
+        dto.setTags(tagDTOs);
 
-        // 4. Gọi service lưu post + files + tags + user
         PostDTO result = postService.saveWithFiles(dto, form.getFiles());
 
         return ResponseEntity.created(new URI("/api/posts/" + result.getId())).body(result);
