@@ -43,4 +43,6 @@ public interface ReactionRepository extends JpaRepository<Reaction, Long> {
     Optional<Reaction> findOneWithToOneRelationships(@Param("id") Long id);
 
     Page<Reaction> findAllByPostId(Long postId, Pageable pageable);
+
+    boolean existsByPostIdAndUserId(Long postId, Long userId);
 }

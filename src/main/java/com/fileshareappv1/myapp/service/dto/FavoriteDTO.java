@@ -13,7 +13,6 @@ public class FavoriteDTO implements Serializable {
 
     private Long id;
 
-    @NotNull
     private Instant savedAt;
 
     private PostDTO post;

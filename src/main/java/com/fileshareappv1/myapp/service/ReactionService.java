@@ -155,4 +155,15 @@ public class ReactionService {
         LOG.debug("Request to get all Reactions");
         return reactionRepository.findAllByPostId(postId, pageable).map(reactionMapper::toDto);
     }
+
+    /**
+     * Check xem user hiện tại đã like (react) post chưa.
+     *
+     * @param postId id của post
+     * @param userId id của user
+     */
+    @Transactional(readOnly = true)
+    public boolean hasReacted(Long postId, Long userId) {
+        return reactionRepository.existsByPostIdAndUserId(postId, userId);
+    }
 }
