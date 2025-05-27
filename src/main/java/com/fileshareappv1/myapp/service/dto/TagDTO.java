@@ -17,7 +17,7 @@ public class TagDTO implements Serializable {
     @NotNull
     private String name;
 
-    private Set<PostDTO> posts = new HashSet<>();
+    private Set<Long> postIds = new HashSet<>();
 
     public Long getId() {
         return id;
@@ -33,14 +33,6 @@ public class TagDTO implements Serializable {
 
     public void setName(String name) {
         this.name = name;
-    }
-
-    public Set<PostDTO> getPosts() {
-        return posts;
-    }
-
-    public void setPosts(Set<PostDTO> posts) {
-        this.posts = posts;
     }
 
     @Override
@@ -64,13 +56,16 @@ public class TagDTO implements Serializable {
         return Objects.hash(this.id);
     }
 
-    // prettier-ignore
     @Override
     public String toString() {
-        return "TagDTO{" +
-            "id=" + getId() +
-            ", name='" + getName() + "'" +
-            ", posts=" + getPosts() +
-            "}";
+        return "TagDTO{" + "id=" + id + ", name='" + name + '\'' + ", postIds=" + postIds + '}';
+    }
+
+    public Set<Long> getPostIds() {
+        return postIds;
+    }
+
+    public void setPostIds(Set<Long> postIds) {
+        this.postIds = postIds;
     }
 }

@@ -13,11 +13,10 @@ import org.mapstruct.*;
  */
 @Mapper(componentModel = "spring")
 public interface TagMapper extends EntityMapper<TagDTO, Tag> {
-    @Mapping(target = "posts", source = "posts", qualifiedByName = "postIdSet")
-    TagDTO toDto(Tag s);
+    @Mapping(target = "postIds", source = "posts")
+    TagDTO toDto(Tag tag);
 
     @Mapping(target = "posts", ignore = true)
-    @Mapping(target = "removePosts", ignore = true)
     Tag toEntity(TagDTO tagDTO);
 
     @Named("postId")
@@ -28,5 +27,12 @@ public interface TagMapper extends EntityMapper<TagDTO, Tag> {
     @Named("postIdSet")
     default Set<PostDTO> toDtoPostIdSet(Set<Post> post) {
         return post.stream().map(this::toDtoPostId).collect(Collectors.toSet());
+    }
+
+    default Set<Long> mapPostsToIds(Set<Post> posts) {
+        if (posts == null) {
+            return Set.of();
+        }
+        return posts.stream().map(Post::getId).collect(Collectors.toSet());
     }
 }
