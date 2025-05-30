@@ -14,6 +14,7 @@ import com.fileshareappv1.myapp.service.storage.LocalStorageService;
 import com.fileshareappv1.myapp.web.rest.errors.*;
 import com.fileshareappv1.myapp.web.rest.vm.KeyAndPasswordVM;
 import com.fileshareappv1.myapp.web.rest.vm.ManagedUserVM;
+import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -148,40 +149,36 @@ public class AccountResource {
     //    }
 
     @PostMapping(value = "/account", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @Transactional
     public ResponseEntity<AdminUserDTO> saveAccount(
         @ModelAttribute AdminUserDTO form,
-        @RequestParam(value = "file", required = false) MultipartFile file
+        @RequestPart(value = "file", required = false) MultipartFile file
     ) {
-        // 1) get the logged-in user
+        // 1) load with authorities in one go
         String login = SecurityUtils.getCurrentUserLogin()
             .orElseThrow(() -> new BadRequestAlertException("Not authenticated", "account", "notloggedin"));
         User user = userRepository
-            .findOneByLogin(login)
-            .orElseThrow(() -> new BadRequestAlertException("User not found: " + login, "account", "usernotfound"));
+            .findOneWithAuthoritiesByLogin(login)
+            .orElseThrow(() -> new BadRequestAlertException("User not found", "account", "usernotfound"));
 
-        // 2) if they sent a file, store it and record it both in file table and in user_files
+        // 2) handle optional file exactly as before
         if (file != null && !file.isEmpty()) {
-            // store on disk
-            String storedName = localStorageService.store(file);
-            String url = ServletUriComponentsBuilder.fromCurrentContextPath().path("/api/files/download/").path(storedName).toUriString();
+            String stored = localStorageService.store(file);
+            String url = ServletUriComponentsBuilder.fromCurrentContextPath().path("/api/files/download/").path(stored).toUriString();
 
-            // persist in your file table
-            FileDTO f = new FileDTO();
-            f.setFileName(storedName);
-            f.setFileUrl(url);
-            f.setMimeType(Optional.ofNullable(file.getContentType()).orElse(MediaType.APPLICATION_OCTET_STREAM_VALUE));
-            f.setFileSize(file.getSize());
-            f.setUploadedAt(Instant.now());
-            fileService.save(f);
+            FileDTO dto = new FileDTO();
+            dto.setFileName(stored);
+            dto.setFileUrl(url);
+            dto.setMimeType(Optional.ofNullable(file.getContentType()).orElse(MediaType.APPLICATION_OCTET_STREAM_VALUE));
+            dto.setFileSize(file.getSize());
+            dto.setUploadedAt(Instant.now());
+            fileService.save(dto);
 
-            // add to your jpa ElementCollection user_files
             user.getFiles().add(url);
-
-            // also set the “main” avatar field if you want:
             user.setImageUrl(url);
         }
 
-        // 3) copy the rest of the form into your user entity
+        // 3) copy the rest of the form
         user.setFirstName(form.getFirstName());
         user.setLastName(form.getLastName());
         user.setEmail(form.getEmail().toLowerCase());
@@ -192,9 +189,10 @@ public class AccountResource {
 
         user.setLastModifiedBy(login);
         user.setLastModifiedDate(Instant.now());
+
         userRepository.save(user);
 
-        // 4) build and return the full AdminUserDTO (it picks up both imageUrl and files[])
+        // 4) now authorities are already initialized
         return ResponseEntity.ok(new AdminUserDTO(user));
     }
 
