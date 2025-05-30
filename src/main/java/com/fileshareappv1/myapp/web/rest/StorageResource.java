@@ -1,6 +1,6 @@
 package com.fileshareappv1.myapp.web.rest;
 
-import com.fileshareappv1.myapp.service.storage.StorageService;
+import com.fileshareappv1.myapp.service.storage.StorageRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.net.URI;
@@ -18,22 +18,22 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 @RequestMapping("/api")
 public class StorageResource {
 
-    private final StorageService storageService;
+    private final StorageRepository storageRepository;
 
-    public StorageResource(StorageService storageService) {
-        this.storageService = storageService;
+    public StorageResource(StorageRepository storageRepository) {
+        this.storageRepository = storageRepository;
     }
 
     @PostMapping("/storage/upload")
     public ResponseEntity<Map<String, String>> upload(@RequestParam("file") MultipartFile file) {
-        String filename = storageService.store(file);
+        String filename = storageRepository.store(file);
         URI fileUri = ServletUriComponentsBuilder.fromCurrentContextPath().path("/api/storage/").path(filename).build().toUri();
         return ResponseEntity.created(fileUri).body(Map.of("filename", filename, "url", fileUri.toString()));
     }
 
     @GetMapping("/storage/{filename:.+}")
     public ResponseEntity<Resource> download(@PathVariable String filename, HttpServletRequest request) {
-        Resource resource = storageService.loadAsResource(filename);
+        Resource resource = storageRepository.loadAsResource(filename);
 
         String contentType = null;
         try {

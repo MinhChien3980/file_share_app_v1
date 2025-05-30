@@ -6,13 +6,11 @@ import com.fileshareappv1.myapp.repository.FileRepository;
 import com.fileshareappv1.myapp.repository.PostRepository;
 import com.fileshareappv1.myapp.service.FileService;
 import com.fileshareappv1.myapp.service.dto.FileDTO;
-import com.fileshareappv1.myapp.service.dto.PostDTO;
-import com.fileshareappv1.myapp.service.storage.StorageService;
+import com.fileshareappv1.myapp.service.storage.StorageRepository;
 import com.fileshareappv1.myapp.web.rest.errors.BadRequestAlertException;
 import com.fileshareappv1.myapp.web.rest.errors.ElasticsearchExceptionMapper;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import java.io.IOException;
@@ -32,7 +30,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.repository.reactive.ReactiveCrudRepository;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -61,18 +58,18 @@ public class FileResource {
 
     private final FileRepository fileRepository;
 
-    private final StorageService storageService;
+    private final StorageRepository storageRepository;
     private final PostRepository postRepository;
 
     public FileResource(
         FileService fileService,
         FileRepository fileRepository,
-        StorageService storageService,
+        StorageRepository storageRepository,
         PostRepository postRepository
     ) {
         this.fileService = fileService;
         this.fileRepository = fileRepository;
-        this.storageService = storageService;
+        this.storageRepository = storageRepository;
         this.postRepository = postRepository;
     }
 
@@ -228,7 +225,7 @@ public class FileResource {
 
     @PostMapping("/upload")
     public ResponseEntity<FileDTO> uploadFile(@RequestParam("file") MultipartFile file) throws URISyntaxException {
-        String storedFilename = storageService.store(file);
+        String storedFilename = storageRepository.store(file);
 
         FileDTO dto = new FileDTO();
         dto.setFileName(file.getOriginalFilename());
@@ -247,7 +244,7 @@ public class FileResource {
 
     @GetMapping("/download/{filename:.+}")
     public ResponseEntity<Resource> downloadFile(@PathVariable String filename, HttpServletRequest request) {
-        Resource resource = storageService.loadAsResource(filename);
+        Resource resource = storageRepository.loadAsResource(filename);
 
         String contentType;
         try {
@@ -277,7 +274,7 @@ public class FileResource {
         @RequestParam("postId") Long postId
     ) throws URISyntaxException {
         // 1. Store tất cả file, thu về list tên (UUID.ext)
-        List<String> storedNames = files.stream().map(storageService::store).toList();
+        List<String> storedNames = files.stream().map(storageRepository::store).toList();
 
         // 2. Cập nhật Post chỉ một lần
         Post post = postRepository.findById(postId).orElseThrow(() -> new EntityNotFoundException("Post không tồn tại: " + postId));

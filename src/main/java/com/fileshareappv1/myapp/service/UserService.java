@@ -24,6 +24,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -363,5 +364,12 @@ public class UserService {
     @Transactional(readOnly = true)
     public List<String> getAuthorities() {
         return authorityRepository.findAll().stream().map(Authority::getName).toList();
+    }
+
+    public AdminUserDTO updateImage(Long userId, String imageUrl) {
+        User user = userRepository.findById(userId).orElseThrow(() -> new UsernameNotFoundException("User not found: " + userId));
+        user.setImageUrl(imageUrl);
+        userRepository.save(user);
+        return new AdminUserDTO(user);
     }
 }

@@ -12,7 +12,7 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 @Service
-public class LocalStorageService implements StorageService {
+public class LocalStorageService implements StorageRepository {
 
     private final Path rootLocation;
 

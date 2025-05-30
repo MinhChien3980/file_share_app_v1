@@ -1,18 +1,18 @@
 package com.fileshareappv1.myapp.service;
 
-import co.elastic.clients.util.DateTime;
 import com.fileshareappv1.myapp.domain.Post;
 import com.fileshareappv1.myapp.repository.PostRepository;
 import com.fileshareappv1.myapp.repository.search.PostSearchRepository;
 import com.fileshareappv1.myapp.service.dto.FileDTO;
 import com.fileshareappv1.myapp.service.dto.PostDTO;
 import com.fileshareappv1.myapp.service.mapper.PostMapper;
-import com.fileshareappv1.myapp.service.storage.StorageService;
+import com.fileshareappv1.myapp.service.storage.StorageRepository;
 import jakarta.persistence.EntityNotFoundException;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -37,20 +37,20 @@ public class PostService {
     private final PostMapper postMapper;
 
     private final PostSearchRepository postSearchRepository;
-    private final StorageService storageService;
+    private final StorageRepository storageRepository;
     private final FileService fileService;
 
     public PostService(
         PostRepository postRepository,
         PostMapper postMapper,
         PostSearchRepository postSearchRepository,
-        StorageService storageService,
+        StorageRepository storageRepository,
         FileService fileService
     ) {
         this.postRepository = postRepository;
         this.postMapper = postMapper;
         this.postSearchRepository = postSearchRepository;
-        this.storageService = storageService;
+        this.storageRepository = storageRepository;
         this.fileService = fileService;
     }
 
@@ -185,24 +185,29 @@ public class PostService {
      */
     @Transactional
     public PostDTO saveWithFiles(PostDTO postDTO, List<MultipartFile> files) {
-        // 1. Tạo post trước
+        // 1. Save the Post entity
         Post post = postMapper.toEntity(postDTO);
         post = postRepository.save(post);
         postSearchRepository.index(post);
 
-        // 2. Nếu có files đính kèm, lưu tiếp
+        List<FileDTO> fileDtos = List.of();
         if (files != null && !files.isEmpty()) {
-            this.storeFilesForPost(post.getId(), files);
+            fileDtos = this.storeFilesForPost(post.getId(), files);
         }
         Post reloaded = postRepository.findOneWithEagerRelationships(post.getId()).orElse(post);
-        // 3. Trả về DTO mới, đã bao gồm files + numFiles
-        return postMapper.toDto(reloaded);
+        PostDTO result = postMapper.toDto(reloaded);
+
+        List<String> urls = fileDtos.stream().map(FileDTO::getFileUrl).collect(Collectors.toList());
+        result.setFiles(urls);
+        result.setNumFiles(urls.size());
+
+        return result;
     }
 
     @Transactional
     public List<FileDTO> storeFilesForPost(Long postId, List<MultipartFile> files) {
         // 1. Lưu lên disk, thu list tên
-        List<String> storedNames = files.stream().map(storageService::store).toList();
+        List<String> storedNames = files.stream().map(storageRepository::store).toList();
 
         // 2. Ghi tên vào Post.files và update numFiles
         this.addFiles(postId, storedNames);

@@ -3,21 +3,28 @@ package com.fileshareappv1.myapp.web.rest;
 import com.fileshareappv1.myapp.domain.User;
 import com.fileshareappv1.myapp.repository.UserRepository;
 import com.fileshareappv1.myapp.security.SecurityUtils;
+import com.fileshareappv1.myapp.service.FileService;
 import com.fileshareappv1.myapp.service.MailService;
 import com.fileshareappv1.myapp.service.UserService;
 import com.fileshareappv1.myapp.service.dto.AdminUserDTO;
+import com.fileshareappv1.myapp.service.dto.FileDTO;
 import com.fileshareappv1.myapp.service.dto.PasswordChangeDTO;
+import com.fileshareappv1.myapp.service.storage.LocalStorageService;
 import com.fileshareappv1.myapp.web.rest.errors.*;
 import com.fileshareappv1.myapp.web.rest.vm.KeyAndPasswordVM;
 import com.fileshareappv1.myapp.web.rest.vm.ManagedUserVM;
 import jakarta.validation.Valid;
-import java.sql.Date;
+import java.time.Instant;
 import java.util.*;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 /**
  * REST controller for managing the current user's account.
@@ -40,11 +47,21 @@ public class AccountResource {
     private final UserService userService;
 
     private final MailService mailService;
+    private final LocalStorageService localStorageService;
+    private final FileService fileService;
 
-    public AccountResource(UserRepository userRepository, UserService userService, MailService mailService) {
+    public AccountResource(
+        UserRepository userRepository,
+        UserService userService,
+        MailService mailService,
+        LocalStorageService localStorageService,
+        FileService fileService
+    ) {
         this.userRepository = userRepository;
         this.userService = userService;
         this.mailService = mailService;
+        this.localStorageService = localStorageService;
+        this.fileService = fileService;
     }
 
     /**
@@ -180,5 +197,53 @@ public class AccountResource {
             password.length() < ManagedUserVM.PASSWORD_MIN_LENGTH ||
             password.length() > ManagedUserVM.PASSWORD_MAX_LENGTH
         );
+    }
+
+    /**
+     * POST  /account/image : Uploads a new profile image for the current user.
+     *
+     * @param file the image file to upload (multipart/form-data)
+     * @return the updated user DTO with new imageUrl
+     */
+    @PostMapping(value = "/account/image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<AdminUserDTO> uploadImage(@RequestParam("file") MultipartFile file) {
+        if (file.isEmpty()) {
+            throw new BadRequestAlertException("No file provided", "account", "filenotprovided");
+        }
+
+        // 1) store the file on disk (returns something like "57a68259-…png")
+        String storedFilename = localStorageService.store(file);
+
+        // 2) build the public download URL
+        String fileUrl = ServletUriComponentsBuilder.fromCurrentContextPath()
+            .path("/api/files/download/")
+            .path(storedFilename)
+            .toUriString();
+
+        // 3) persist a FileDTO (will insert into your file table)
+        FileDTO fileDto = new FileDTO();
+        fileDto.setFileName(storedFilename);
+        fileDto.setFileUrl(fileUrl);
+        fileDto.setMimeType(Optional.ofNullable(file.getContentType()).orElse(MediaType.APPLICATION_OCTET_STREAM_VALUE));
+        fileDto.setFileSize(file.getSize());
+        fileDto.setUploadedAt(Instant.now());
+        fileService.save(fileDto);
+
+        // 4) look up the current user
+        String login = SecurityUtils.getCurrentUserLogin()
+            .orElseThrow(() -> new BadRequestAlertException("Not authenticated", "account", "notloggedin"));
+        User user = userRepository
+            .findOneByLogin(login)
+            .orElseThrow(() -> new BadRequestAlertException("User not found: " + login, "account", "usernotfound"));
+
+        // 5) update their imageUrl and save
+        user.setImageUrl(fileUrl);
+        user.setLastModifiedBy(login);
+        user.setLastModifiedDate(Instant.now());
+        userRepository.save(user);
+
+        // 6) return 200 + the updated DTO
+        AdminUserDTO result = new AdminUserDTO(user);
+        return ResponseEntity.ok(result);
     }
 }
