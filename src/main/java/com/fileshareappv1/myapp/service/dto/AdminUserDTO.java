@@ -91,6 +91,7 @@ public class AdminUserDTO implements Serializable {
         this.phoneNumber = user.getPhoneNumber();
         this.address = user.getAddress();
         this.dateOfBirth = user.getDateOfBirth();
+        this.files = user.getFiles() != null ? user.getFiles() : new ArrayList<>();
     }
 
     public Long getId() {

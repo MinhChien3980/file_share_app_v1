@@ -26,6 +26,7 @@ public interface PostMapper extends EntityMapper<PostDTO, Post> {
     @BeanMapping(ignoreByDefault = true)
     @Mapping(target = "id", source = "id")
     @Mapping(target = "login", source = "login")
+    @Mapping(target = "imageUrl", source = "imageUrl")
     UserDTO toDtoUserLogin(User user);
 
     @Named("tagName")
