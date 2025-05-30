@@ -115,7 +115,7 @@ public class PostService {
     @Transactional(readOnly = true)
     public Page<PostDTO> findAll(Pageable pageable) {
         LOG.debug("Request to get all Posts");
-        return postRepository.findAll(pageable).map(postMapper::toDto);
+        return postRepository.findAll(pageable).map(this::convertFilesToUrls);
     }
 
     /**
@@ -124,7 +124,7 @@ public class PostService {
      * @return the list of entities.
      */
     public Page<PostDTO> findAllWithEagerRelationships(Pageable pageable) {
-        return postRepository.findAllWithEagerRelationships(pageable).map(postMapper::toDto);
+        return postRepository.findAllWithEagerRelationships(pageable).map(this::convertFilesToUrls);
     }
 
     /**
@@ -136,7 +136,7 @@ public class PostService {
     @Transactional(readOnly = true)
     public Optional<PostDTO> findOne(Long id) {
         LOG.debug("Request to get Post : {}", id);
-        return postRepository.findOneWithEagerRelationships(id).map(postMapper::toDto);
+        return postRepository.findOneWithEagerRelationships(id).map(this::convertFilesToUrls);
     }
 
     /**
@@ -160,12 +160,30 @@ public class PostService {
     @Transactional(readOnly = true)
     public Page<PostDTO> search(String query, Pageable pageable) {
         LOG.debug("Request to search for a page of Posts for query {}", query);
-        return postSearchRepository.search(query, pageable).map(postMapper::toDto);
+        return postSearchRepository.search(query, pageable).map(this::convertFilesToUrls);
     }
 
     public Page<PostDTO> findMyPosts(Pageable pageable) {
         LOG.debug("Request to get all Posts");
-        return postRepository.findByCurrentUser(pageable).map(postMapper::toDto);
+        return postRepository.findByCurrentUser(pageable).map(this::convertFilesToUrls);
+    }
+
+    /**
+     * Convert a Post entity to PostDTO and convert file names to full URLs
+     */
+    private PostDTO convertFilesToUrls(Post post) {
+        PostDTO dto = postMapper.toDto(post);
+        if (dto.getFiles() != null && !dto.getFiles().isEmpty()) {
+            List<String> fileUrls = dto
+                .getFiles()
+                .stream()
+                .map(fileName ->
+                    ServletUriComponentsBuilder.fromCurrentContextPath().path("/api/files/download/").path(fileName).toUriString()
+                )
+                .collect(Collectors.toList());
+            dto.setFiles(fileUrls);
+        }
+        return dto;
     }
 
     @Transactional
