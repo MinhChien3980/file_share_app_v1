@@ -2,15 +2,18 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches: [develop]
+    branches:
+      - develop
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - name: Run tests
-        run: mvn test -Pprod
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Run unit & integration tests
+        run: mvn clean verify -Pprod -DskipTests=false
 
   deploy:
     needs: build
@@ -26,13 +29,17 @@ jobs:
           mkdir -p ~/.ssh
           ssh-keyscan -H ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
 
-      - name: Deploy on server
+      - name: Deploy to VPS
         run: |
-          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} << 'EOF'
+          ssh -o StrictHostKeyChecking=yes \
+            ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} << 'EOF'
             set -e
             cd ~/project/file_share_app_v1
+
             git pull
+
             ./mvnw clean verify -Pprod jib:dockerBuild -DskipTests
+
             cd docker-compose
             docker compose build
             docker compose up -d --remove-orphans
