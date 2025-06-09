@@ -16,7 +16,7 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
-      - name: Setup SSH
+      - name: Setup SSH agent
         uses: webfactory/ssh-agent@v0.7.0
         with:
           ssh-private-key: ${{ secrets.SERVER_SSH_KEY }}
