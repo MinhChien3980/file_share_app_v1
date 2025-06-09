@@ -40,13 +40,26 @@ spring:
     username: root
     password:
     hikari:
-      poolName: Hikari
+      pool-name: HikariPool-FSA
       auto-commit: false
       data-source-properties:
         cachePrepStmts: true
         prepStmtCacheSize: 250
         prepStmtCacheSqlLimit: 2048
         useServerPrepStmts: true
+      minimum-idle: 5
+      maximum-pool-size: 20
+      connection-timeout: 30000
+      # Trước khi cấp connection, Hikari chạy SELECT 1 để kiểm tra
+      connection-test-query: SELECT 1
+      validation-timeout: 5000
+      # Nếu connection idle quá lâu, pool sẽ đóng
+      idle-timeout: 600000
+      # Mỗi connection chỉ sống tối đa "max-lifetime" rồi sẽ bị vứt
+      # Hãy đặt thấp hơn mysql wait_timeout (mặc định 28800s = 8h)
+      max-lifetime: 25000000
+      # Không fail ngay khi start nếu DB chưa ready
+      initialization-fail-timeout: 0
   elasticsearch:
     #    uris: http://fileshareappv1-elasticsearch:9200
     #    connection:
