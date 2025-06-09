@@ -74,7 +74,7 @@ services:
         - CMD
         - curl
         - -f
-        - http://localhost:9200/_cluster/health?wait_for_status=yellow&timeout=30s
+        - 'http://localhost:9200/_cluster/health?wait_for_status=yellow&timeout=30s'
       interval: 5s
       timeout: 10s
       retries: 10
