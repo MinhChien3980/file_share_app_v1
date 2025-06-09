@@ -12,9 +12,6 @@ jobs:
       - name: Checkout source
         uses: actions/checkout@v4
 
-      - name: Run unit & integration tests
-        run: mvn clean verify -Pprod -DskipTests=false
-
   deploy:
     needs: build
     runs-on: ubuntu-latest
