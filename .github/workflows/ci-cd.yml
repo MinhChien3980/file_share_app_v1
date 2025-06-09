@@ -20,13 +20,20 @@ jobs:
         uses: webfactory/ssh-agent@v0.7.0
         with:
           ssh-private-key: ${{ secrets.SERVER_SSH_KEY }}
+
+      - name: Add server to known_hosts
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -H ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
+
       - name: Deploy on server
         run: |
           ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} << 'EOF'
+            set -e
             cd ~/project/file_share_app_v1
             git pull
             ./mvnw clean verify -Pprod jib:dockerBuild -DskipTests
-            cd ~/project/file_share_app_v1/docker-compose
+            cd docker-compose
             docker compose build
             docker compose up -d --remove-orphans
           EOF
