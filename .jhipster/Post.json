@@ -1,0 +1,91 @@
+{
+  "annotations": {
+    "changelogDate": "20250517201738"
+  },
+  "applications": ["fileShareAppV1"],
+  "dto": "mapstruct",
+  "fields": [
+    {
+      "fieldName": "content",
+      "fieldType": "TextBlob",
+      "fieldValidateRules": ["required"]
+    },
+    {
+      "fieldName": "createdAt",
+      "fieldType": "Instant",
+      "fieldValidateRules": ["required"]
+    },
+    {
+      "fieldName": "updatedAt",
+      "fieldType": "Instant",
+      "fieldValidateRules": ["required"]
+    },
+    {
+      "fieldName": "locationName",
+      "fieldType": "String"
+    },
+    {
+      "fieldName": "locationLat",
+      "fieldType": "BigDecimal",
+      "fieldValidateRules": ["max"],
+      "fieldValidateRulesMax": "90"
+    },
+    {
+      "fieldName": "locationLong",
+      "fieldType": "BigDecimal",
+      "fieldValidateRules": ["max"],
+      "fieldValidateRulesMax": "180"
+    },
+    {
+      "fieldName": "privacy",
+      "fieldType": "Privacy",
+      "fieldValidateRules": ["required"],
+      "fieldValues": "PUBLIC,FRIENDS,ONLY_ME"
+    },
+    {
+      "fieldName": "scheduledAt",
+      "fieldType": "Instant"
+    },
+    {
+      "fieldName": "viewCount",
+      "fieldType": "Long",
+      "fieldValidateRules": ["required"]
+    },
+    {
+      "fieldName": "commentCount",
+      "fieldType": "Long",
+      "fieldValidateRules": ["required"]
+    },
+    {
+      "fieldName": "shareCount",
+      "fieldType": "Long",
+      "fieldValidateRules": ["required"]
+    },
+    {
+      "fieldName": "reactionCount",
+      "fieldType": "Long",
+      "fieldValidateRules": ["required"]
+    }
+  ],
+  "name": "Post",
+  "pagination": "pagination",
+  "relationships": [
+    {
+      "otherEntityField": "login",
+      "otherEntityName": "user",
+      "relationshipName": "user",
+      "relationshipSide": "left",
+      "relationshipType": "many-to-one",
+      "relationshipWithBuiltInEntity": true
+    },
+    {
+      "otherEntityField": "name",
+      "otherEntityName": "tag",
+      "otherEntityRelationshipName": "posts",
+      "relationshipName": "tags",
+      "relationshipSide": "left",
+      "relationshipType": "many-to-many"
+    }
+  ],
+  "service": "serviceClass"
+}

@@ -1,0 +1,28 @@
+{
+  "fileShareAppV1App": {
+    "reaction": {
+      "home": {
+        "title": "Reactions",
+        "refreshListLabel": "Refresh list",
+        "createLabel": "Thêm mới một Reaction",
+        "createOrEditLabel": "Thêm mới hoặc cập nhật Reaction",
+        "search": "Tìm Reaction",
+        "notFound": "No Reactions found"
+      },
+      "created": "Một Reaction mới được tạo với định danh {{ param }}",
+      "updated": "Một Reaction cập nhật với định danh {{ param }}",
+      "deleted": "Một Reaction đã xóa với định danh {{ param }}",
+      "delete": {
+        "question": "Bạn có chắc là muốn xóa Reaction {{ id }}?"
+      },
+      "detail": {
+        "title": "Reaction"
+      },
+      "id": "ID",
+      "type": "Type",
+      "reactedAt": "Reacted At",
+      "post": "Post",
+      "user": "User"
+    }
+  }
+}

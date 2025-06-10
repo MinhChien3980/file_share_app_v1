@@ -1,0 +1,33 @@
+{
+  "annotations": {
+    "changelogDate": "20250517201746"
+  },
+  "applications": ["fileShareAppV1"],
+  "dto": "mapstruct",
+  "fields": [
+    {
+      "fieldName": "createdAt",
+      "fieldType": "Instant",
+      "fieldValidateRules": ["required"]
+    }
+  ],
+  "name": "Share",
+  "pagination": "pagination",
+  "relationships": [
+    {
+      "otherEntityName": "post",
+      "relationshipName": "post",
+      "relationshipSide": "left",
+      "relationshipType": "many-to-one"
+    },
+    {
+      "otherEntityField": "login",
+      "otherEntityName": "user",
+      "relationshipName": "user",
+      "relationshipSide": "left",
+      "relationshipType": "many-to-one",
+      "relationshipWithBuiltInEntity": true
+    }
+  ],
+  "service": "serviceClass"
+}

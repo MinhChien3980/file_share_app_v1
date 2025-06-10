@@ -1,0 +1,46 @@
+{
+  "annotations": {
+    "changelogDate": "20250517201739"
+  },
+  "applications": ["fileShareAppV1"],
+  "dto": "mapstruct",
+  "fields": [
+    {
+      "fieldName": "fileName",
+      "fieldType": "String",
+      "fieldValidateRules": ["required"]
+    },
+    {
+      "fieldName": "fileUrl",
+      "fieldType": "String",
+      "fieldValidateRules": ["required"]
+    },
+    {
+      "fieldName": "mimeType",
+      "fieldType": "String",
+      "fieldValidateRules": ["required"]
+    },
+    {
+      "fieldName": "fileSize",
+      "fieldType": "Long",
+      "fieldValidateRules": ["required", "min"],
+      "fieldValidateRulesMin": "0"
+    },
+    {
+      "fieldName": "uploadedAt",
+      "fieldType": "Instant",
+      "fieldValidateRules": ["required"]
+    }
+  ],
+  "name": "File",
+  "pagination": "pagination",
+  "relationships": [
+    {
+      "otherEntityName": "post",
+      "relationshipName": "post",
+      "relationshipSide": "left",
+      "relationshipType": "many-to-one"
+    }
+  ],
+  "service": "serviceClass"
+}

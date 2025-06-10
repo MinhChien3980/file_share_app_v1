@@ -1,11 +1,16 @@
 package com.fileshareappv1.myapp.service.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fileshareappv1.myapp.config.Constants;
 import com.fileshareappv1.myapp.domain.Authority;
 import com.fileshareappv1.myapp.domain.User;
 import jakarta.validation.constraints.*;
 import java.io.Serializable;
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -41,6 +46,17 @@ public class AdminUserDTO implements Serializable {
     @Size(min = 2, max = 10)
     private String langKey;
 
+    private String firebaseUid;
+
+    @Size(min = 10, max = 10)
+    private String phoneNumber;
+
+    @Size(max = 256)
+    private String address;
+
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
+    private LocalDate dateOfBirth;
+
     private String createdBy;
 
     private Instant createdDate;
@@ -50,6 +66,8 @@ public class AdminUserDTO implements Serializable {
     private Instant lastModifiedDate;
 
     private Set<String> authorities;
+
+    private List<String> files = new ArrayList<>();
 
     public AdminUserDTO() {
         // Empty constructor needed for Jackson.
@@ -69,6 +87,11 @@ public class AdminUserDTO implements Serializable {
         this.lastModifiedBy = user.getLastModifiedBy();
         this.lastModifiedDate = user.getLastModifiedDate();
         this.authorities = user.getAuthorities().stream().map(Authority::getName).collect(Collectors.toSet());
+        this.firebaseUid = user.getFirebaseUid();
+        this.phoneNumber = user.getPhoneNumber();
+        this.address = user.getAddress();
+        this.dateOfBirth = user.getDateOfBirth();
+        this.files = user.getFiles() != null ? user.getFiles() : new ArrayList<>();
     }
 
     public Long getId() {
@@ -192,5 +215,45 @@ public class AdminUserDTO implements Serializable {
             ", lastModifiedDate=" + lastModifiedDate +
             ", authorities=" + authorities +
             "}";
+    }
+
+    public String getFirebaseUid() {
+        return firebaseUid;
+    }
+
+    public void setFirebaseUid(String firebaseUid) {
+        this.firebaseUid = firebaseUid;
+    }
+
+    public String getPhoneNumber() {
+        return phoneNumber;
+    }
+
+    public void setPhoneNumber(String phoneNumber) {
+        this.phoneNumber = phoneNumber;
+    }
+
+    public String getAddress() {
+        return address;
+    }
+
+    public void setAddress(String address) {
+        this.address = address;
+    }
+
+    public LocalDate getDateOfBirth() {
+        return dateOfBirth;
+    }
+
+    public void setDateOfBirth(LocalDate dateOfBirth) {
+        this.dateOfBirth = dateOfBirth;
+    }
+
+    public List<String> getFiles() {
+        return files;
+    }
+
+    public void setFiles(List<String> files) {
+        this.files = files;
     }
 }

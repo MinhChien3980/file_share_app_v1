@@ -3,20 +3,32 @@ package com.fileshareappv1.myapp.web.rest;
 import com.fileshareappv1.myapp.domain.User;
 import com.fileshareappv1.myapp.repository.UserRepository;
 import com.fileshareappv1.myapp.security.SecurityUtils;
+import com.fileshareappv1.myapp.service.FileService;
 import com.fileshareappv1.myapp.service.MailService;
 import com.fileshareappv1.myapp.service.UserService;
 import com.fileshareappv1.myapp.service.dto.AdminUserDTO;
+import com.fileshareappv1.myapp.service.dto.FileDTO;
 import com.fileshareappv1.myapp.service.dto.PasswordChangeDTO;
+import com.fileshareappv1.myapp.service.dto.UserDTO;
+import com.fileshareappv1.myapp.service.storage.LocalStorageService;
 import com.fileshareappv1.myapp.web.rest.errors.*;
 import com.fileshareappv1.myapp.web.rest.vm.KeyAndPasswordVM;
 import com.fileshareappv1.myapp.web.rest.vm.ManagedUserVM;
+import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
+import java.time.Instant;
+import java.time.LocalDate;
 import java.util.*;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 /**
  * REST controller for managing the current user's account.
@@ -39,11 +51,24 @@ public class AccountResource {
     private final UserService userService;
 
     private final MailService mailService;
+    private final LocalStorageService localStorageService;
+    private final FileService fileService;
+    private final LocalStorageService storageService;
 
-    public AccountResource(UserRepository userRepository, UserService userService, MailService mailService) {
+    public AccountResource(
+        UserRepository userRepository,
+        UserService userService,
+        MailService mailService,
+        LocalStorageService localStorageService,
+        FileService fileService,
+        LocalStorageService storageService
+    ) {
         this.userRepository = userRepository;
         this.userService = userService;
         this.mailService = mailService;
+        this.localStorageService = localStorageService;
+        this.fileService = fileService;
+        this.storageService = storageService;
     }
 
     /**
@@ -92,32 +117,83 @@ public class AccountResource {
             .orElseThrow(() -> new AccountResourceException("User could not be found"));
     }
 
-    /**
-     * {@code POST  /account} : update the current user information.
-     *
-     * @param userDTO the current user information.
-     * @throws EmailAlreadyUsedException {@code 400 (Bad Request)} if the email is already used.
-     * @throws RuntimeException {@code 500 (Internal Server Error)} if the user login wasn't found.
-     */
-    @PostMapping("/account")
-    public void saveAccount(@Valid @RequestBody AdminUserDTO userDTO) {
-        String userLogin = SecurityUtils.getCurrentUserLogin()
-            .orElseThrow(() -> new AccountResourceException("Current user login not found"));
-        Optional<User> existingUser = userRepository.findOneByEmailIgnoreCase(userDTO.getEmail());
-        if (existingUser.isPresent() && (!existingUser.orElseThrow().getLogin().equalsIgnoreCase(userLogin))) {
-            throw new EmailAlreadyUsedException();
+    //    /**
+    //     * {@code POST  /account} : update the current user information.
+    //     *
+    //     * @param userDTO the current user information.
+    //     * @throws EmailAlreadyUsedException {@code 400 (Bad Request)} if the email is already used.
+    //     * @throws RuntimeException {@code 500 (Internal Server Error)} if the user login wasn't found.
+    //     */
+    //    @PostMapping("/account")
+    //    public Map<String, Object> saveAccount(@Valid @RequestBody AdminUserDTO userDTO) {
+    //        String userLogin = SecurityUtils.getCurrentUserLogin()
+    //            .orElseThrow(() -> new AccountResourceException("Current user login not found"));
+    //        Optional<User> existingUser = userRepository.findOneByEmailIgnoreCase(userDTO.getEmail());
+    //        if (existingUser.isPresent() && (!existingUser.orElseThrow().getLogin().equalsIgnoreCase(userLogin))) {
+    //            throw new EmailAlreadyUsedException();
+    //        }
+    //        Optional<User> user = userRepository.findOneByLogin(userLogin);
+    //        if (!user.isPresent()) {
+    //            throw new AccountResourceException("User could not be found");
+    //        }
+    //        return userService.updateUser(
+    //            userDTO.getFirstName(),
+    //            userDTO.getLastName(),
+    //            userDTO.getEmail(),
+    //            userDTO.getLangKey(),
+    //            userDTO.getImageUrl(),
+    //            userDTO.getPhoneNumber(),
+    //            userDTO.getAddress(),
+    //            userDTO.getDateOfBirth()
+    //        );
+    //    }
+
+    @PostMapping(value = "/account", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @Transactional
+    public ResponseEntity<AdminUserDTO> saveAccount(
+        @ModelAttribute AdminUserDTO form,
+        @RequestPart(value = "file", required = false) MultipartFile file
+    ) {
+        // 1) load with authorities in one go
+        String login = SecurityUtils.getCurrentUserLogin()
+            .orElseThrow(() -> new BadRequestAlertException("Not authenticated", "account", "notloggedin"));
+        User user = userRepository
+            .findOneWithAuthoritiesByLogin(login)
+            .orElseThrow(() -> new BadRequestAlertException("User not found", "account", "usernotfound"));
+
+        // 2) handle optional file exactly as before
+        if (file != null && !file.isEmpty()) {
+            String stored = localStorageService.store(file);
+            String url = ServletUriComponentsBuilder.fromCurrentContextPath().path("/api/files/download/").path(stored).toUriString();
+
+            FileDTO dto = new FileDTO();
+            dto.setFileName(stored);
+            dto.setFileUrl(url);
+            dto.setMimeType(Optional.ofNullable(file.getContentType()).orElse(MediaType.APPLICATION_OCTET_STREAM_VALUE));
+            dto.setFileSize(file.getSize());
+            dto.setUploadedAt(Instant.now());
+            fileService.save(dto);
+
+            user.getFiles().add(url);
+            user.setImageUrl(url);
         }
-        Optional<User> user = userRepository.findOneByLogin(userLogin);
-        if (!user.isPresent()) {
-            throw new AccountResourceException("User could not be found");
-        }
-        userService.updateUser(
-            userDTO.getFirstName(),
-            userDTO.getLastName(),
-            userDTO.getEmail(),
-            userDTO.getLangKey(),
-            userDTO.getImageUrl()
-        );
+
+        // 3) copy the rest of the form
+        user.setFirstName(form.getFirstName());
+        user.setLastName(form.getLastName());
+        user.setEmail(form.getEmail().toLowerCase());
+        if (form.getLangKey() != null) user.setLangKey(form.getLangKey());
+        if (form.getPhoneNumber() != null) user.setPhoneNumber(form.getPhoneNumber());
+        if (form.getAddress() != null) user.setAddress(form.getAddress());
+        if (form.getDateOfBirth() != null) user.setDateOfBirth(form.getDateOfBirth());
+
+        user.setLastModifiedBy(login);
+        user.setLastModifiedDate(Instant.now());
+
+        userRepository.save(user);
+
+        // 4) now authorities are already initialized
+        return ResponseEntity.ok(new AdminUserDTO(user));
     }
 
     /**
@@ -176,5 +252,40 @@ public class AccountResource {
             password.length() < ManagedUserVM.PASSWORD_MIN_LENGTH ||
             password.length() > ManagedUserVM.PASSWORD_MAX_LENGTH
         );
+    }
+
+    @PostMapping(value = "/account/image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<AdminUserDTO> uploadImage(@RequestParam("file") MultipartFile file) {
+        if (file.isEmpty()) {
+            throw new BadRequestAlertException("No file provided", "account", "filenotprovided");
+        }
+
+        String storedFilename = localStorageService.store(file);
+
+        String fileUrl = ServletUriComponentsBuilder.fromCurrentContextPath()
+            .path("/api/files/download/")
+            .path(storedFilename)
+            .toUriString();
+
+        FileDTO f = new FileDTO();
+        f.setFileName(storedFilename);
+        f.setFileUrl(fileUrl);
+        f.setMimeType(Optional.ofNullable(file.getContentType()).orElse(MediaType.APPLICATION_OCTET_STREAM_VALUE));
+        f.setFileSize(file.getSize());
+        f.setUploadedAt(Instant.now());
+        fileService.save(f);
+
+        String login = SecurityUtils.getCurrentUserLogin()
+            .orElseThrow(() -> new BadRequestAlertException("Not authenticated", "account", "notloggedin"));
+        User user = userRepository
+            .findOneByLogin(login)
+            .orElseThrow(() -> new BadRequestAlertException("User not found: " + login, "account", "usernotfound"));
+
+        user.setImageUrl(fileUrl);
+        user.setLastModifiedBy(login);
+        user.setLastModifiedDate(Instant.now());
+        userRepository.save(user);
+
+        return ResponseEntity.ok(new AdminUserDTO(user));
     }
 }

@@ -1,0 +1,26 @@
+{
+  "annotations": {
+    "changelogDate": "20250517201744"
+  },
+  "applications": ["fileShareAppV1"],
+  "dto": "mapstruct",
+  "fields": [
+    {
+      "fieldName": "name",
+      "fieldType": "String",
+      "fieldValidateRules": ["required"]
+    }
+  ],
+  "name": "Tag",
+  "pagination": "pagination",
+  "relationships": [
+    {
+      "otherEntityName": "post",
+      "otherEntityRelationshipName": "tags",
+      "relationshipName": "posts",
+      "relationshipSide": "right",
+      "relationshipType": "many-to-many"
+    }
+  ],
+  "service": "serviceClass"
+}

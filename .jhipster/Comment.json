@@ -1,0 +1,45 @@
+{
+  "annotations": {
+    "changelogDate": "20250517201740"
+  },
+  "applications": ["fileShareAppV1"],
+  "dto": "mapstruct",
+  "fields": [
+    {
+      "fieldName": "content",
+      "fieldType": "TextBlob",
+      "fieldValidateRules": ["required"]
+    },
+    {
+      "fieldName": "createdAt",
+      "fieldType": "Instant",
+      "fieldValidateRules": ["required"]
+    }
+  ],
+  "name": "Comment",
+  "pagination": "pagination",
+  "relationships": [
+    {
+      "otherEntityName": "post",
+      "relationshipName": "post",
+      "relationshipSide": "left",
+      "relationshipType": "many-to-one"
+    },
+    {
+      "otherEntityField": "login",
+      "otherEntityName": "user",
+      "relationshipName": "user",
+      "relationshipSide": "left",
+      "relationshipType": "many-to-one",
+      "relationshipWithBuiltInEntity": true
+    },
+    {
+      "otherEntityField": "id",
+      "otherEntityName": "comment",
+      "relationshipName": "parentComment",
+      "relationshipSide": "left",
+      "relationshipType": "many-to-one"
+    }
+  ],
+  "service": "serviceClass"
+}

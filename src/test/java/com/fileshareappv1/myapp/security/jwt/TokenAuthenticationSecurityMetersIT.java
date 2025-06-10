@@ -4,6 +4,7 @@ import static com.fileshareappv1.myapp.security.jwt.JwtAuthenticationTestUtils.*
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 
+import com.fileshareappv1.myapp.service.FirebaseUserService;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import java.util.Collection;
@@ -11,6 +12,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
@@ -28,6 +30,9 @@ class TokenAuthenticationSecurityMetersIT {
 
     @Autowired
     private MeterRegistry meterRegistry;
+
+    @MockitoBean
+    private FirebaseUserService firebaseUserService;
 
     @Test
     void testValidTokenShouldNotCountAnything() throws Exception {

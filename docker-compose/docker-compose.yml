@@ -8,8 +8,20 @@ services:
       - SPRING_DATASOURCE_URL=jdbc:mysql://fileshareappv1-mysql:3306/fileshareappv1?useUnicode=true&characterEncoding=utf8&useSSL=false&useLegacyDatetimeCode=false&createDatabaseIfNotExist=true
       - SPRING_LIQUIBASE_URL=jdbc:mysql://fileshareappv1-mysql:3306/fileshareappv1?useUnicode=true&characterEncoding=utf8&useSSL=false&useLegacyDatetimeCode=false&createDatabaseIfNotExist=true
       - SPRING_ELASTICSEARCH_URIS=http://fileshareappv1-elasticsearch:9200
+      #      - SPRING_ELASTICSEARCH_URIS=http://fileshareapp.io.vn/es
+      - APP_STORAGE_LOCATION=/data/uploads
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=
+      - SPRING_DATASOURCE_HIKARI_CONNECTION-TEST-QUERY=SELECT 1
+      - SPRING_DATASOURCE_HIKARI_VALIDATION-TIMEOUT=5000
+      - SPRING_DATASOURCE_HIKARI_CONNECTION-TIMEOUT=30000
+      - SPRING_DATASOURCE_HIKARI_IDLE-TIMEOUT=600000
+      - SPRING_DATASOURCE_HIKARI_MAX-LIFETIME=25000000
+      - SPRING_DATASOURCE_HIKARI_MINIMUM-IDLE=5
+      - SPRING_DATASOURCE_HIKARI_MAXIMUM-POOL-SIZE=20
+      - SPRING_DATASOURCE_HIKARI_INITIALIZATION-FAIL-TIMEOUT=0
     ports:
-      - 8080:8080
+      - '8080:8080'
     healthcheck:
       test:
         - CMD
@@ -24,33 +36,47 @@ services:
         condition: service_healthy
       fileshareappv1-elasticsearch:
         condition: service_healthy
+    volumes:
+      - ./uploads:/data/uploads
   fileshareappv1-mysql:
     image: mysql:9.2.0
-    volumes:
-      - ./config/mysql:/etc/mysql/conf.d
+    ports:
+      - '3306:3306'
     environment:
       - MYSQL_ALLOW_EMPTY_PASSWORD=yes
       - MYSQL_DATABASE=fileshareappv1
-    command: mysqld --lower_case_table_names=1 --skip-mysqlx --character_set_server=utf8mb4 --explicit_defaults_for_timestamp
+    command: >
+      mysqld
+        --lower_case_table_names=1
+        --skip-mysqlx
+        --character_set_server=utf8mb4
+        --explicit_defaults_for_timestamp=true
     healthcheck:
       test:
         - CMD-SHELL
-        - mysql -e "SHOW DATABASES;" && sleep 5
-      interval: 5s
-      timeout: 10s
-      retries: 10
+        - mysql -uroot -e 'SELECT 1'
+      interval: 60s
+      timeout: 5s
+      retries: 3
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./config/mysql/mysql.cnf:/etc/mysql/conf.d/mysql.cnf:ro
   fileshareappv1-elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.13.4
+    ports:
+      - '9200:9200'
     environment:
       - ES_JAVA_OPTS=-Xms256m -Xmx256m
       - discovery.type=single-node
       - xpack.security.enabled=false
     healthcheck:
-      test:
-        - CMD
-        - curl
-        - -f
-        - http://localhost:9200/_cluster/health?wait_for_status=green&timeout=10s
+      test: ['CMD-SHELL', "curl -f 'http://localhost:9200/_cluster/health?wait_for_status=yellow&timeout=30s' || exit 1"]
       interval: 5s
       timeout: 10s
       retries: 10
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+
+volumes:
+  mysql_data:
+  es_data:

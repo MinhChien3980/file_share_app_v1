@@ -2,6 +2,7 @@ package com.fileshareappv1.myapp;
 
 import com.fileshareappv1.myapp.config.ApplicationProperties;
 import com.fileshareappv1.myapp.config.CRLFLogConverter;
+import com.fileshareappv1.myapp.config.StorageProperties;
 import jakarta.annotation.PostConstruct;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -16,11 +17,15 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.liquibase.LiquibaseProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.core.env.Environment;
+import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
+import org.springframework.scheduling.annotation.EnableAsync;
 import tech.jhipster.config.DefaultProfileUtil;
 import tech.jhipster.config.JHipsterConstants;
 
 @SpringBootApplication
-@EnableConfigurationProperties({ LiquibaseProperties.class, ApplicationProperties.class })
+@EnableAsync
+@EnableJpaAuditing(auditorAwareRef = "springSecurityAuditorAware")
+@EnableConfigurationProperties({ LiquibaseProperties.class, ApplicationProperties.class, StorageProperties.class })
 public class FileShareAppV1App {
 
     private static final Logger LOG = LoggerFactory.getLogger(FileShareAppV1App.class);

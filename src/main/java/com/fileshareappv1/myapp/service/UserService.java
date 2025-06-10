@@ -5,19 +5,26 @@ import com.fileshareappv1.myapp.domain.Authority;
 import com.fileshareappv1.myapp.domain.User;
 import com.fileshareappv1.myapp.repository.AuthorityRepository;
 import com.fileshareappv1.myapp.repository.UserRepository;
+import com.fileshareappv1.myapp.repository.search.UserSearchRepository;
 import com.fileshareappv1.myapp.security.AuthoritiesConstants;
 import com.fileshareappv1.myapp.security.SecurityUtils;
 import com.fileshareappv1.myapp.service.dto.AdminUserDTO;
 import com.fileshareappv1.myapp.service.dto.UserDTO;
+import java.sql.Date;
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -36,11 +43,19 @@ public class UserService {
 
     private final PasswordEncoder passwordEncoder;
 
+    private final UserSearchRepository userSearchRepository;
+
     private final AuthorityRepository authorityRepository;
 
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, AuthorityRepository authorityRepository) {
+    public UserService(
+        UserRepository userRepository,
+        PasswordEncoder passwordEncoder,
+        UserSearchRepository userSearchRepository,
+        AuthorityRepository authorityRepository
+    ) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.userSearchRepository = userSearchRepository;
         this.authorityRepository = authorityRepository;
     }
 
@@ -52,6 +67,7 @@ public class UserService {
                 // activate given user for the registration key.
                 user.setActivated(true);
                 user.setActivationKey(null);
+                userSearchRepository.save(user);
                 LOG.debug("Activated user: {}", user);
                 return user;
             });
@@ -118,6 +134,7 @@ public class UserService {
         authorityRepository.findById(AuthoritiesConstants.USER).ifPresent(authorities::add);
         newUser.setAuthorities(authorities);
         userRepository.save(newUser);
+        userSearchRepository.save(newUser);
         LOG.debug("Created Information for User: {}", newUser);
         return newUser;
     }
@@ -161,6 +178,7 @@ public class UserService {
             user.setAuthorities(authorities);
         }
         userRepository.save(user);
+        userSearchRepository.index(user);
         LOG.debug("Created Information for User: {}", user);
         return user;
     }
@@ -185,6 +203,10 @@ public class UserService {
                 user.setImageUrl(userDTO.getImageUrl());
                 user.setActivated(userDTO.isActivated());
                 user.setLangKey(userDTO.getLangKey());
+                user.setPhoneNumber(userDTO.getPhoneNumber());
+                user.setAddress(userDTO.getAddress());
+                user.setDateOfBirth(userDTO.getDateOfBirth());
+                user.setFirebaseUid(userDTO.getFirebaseUid() == null ? null : userDTO.getFirebaseUid());
                 Set<Authority> managedAuthorities = user.getAuthorities();
                 managedAuthorities.clear();
                 userDTO
@@ -195,6 +217,7 @@ public class UserService {
                     .map(Optional::get)
                     .forEach(managedAuthorities::add);
                 userRepository.save(user);
+                userSearchRepository.index(user);
                 LOG.debug("Changed Information for User: {}", user);
                 return user;
             })
@@ -206,6 +229,7 @@ public class UserService {
             .findOneByLogin(login)
             .ifPresent(user -> {
                 userRepository.delete(user);
+                userSearchRepository.deleteFromIndex(user);
                 LOG.debug("Deleted User: {}", user);
             });
     }
@@ -218,21 +242,68 @@ public class UserService {
      * @param email     email id of user.
      * @param langKey   language key.
      * @param imageUrl  image URL of user.
+     * @param phoneNumber phone number of user.
+     * @param address   address of user.
+     * @param dateOfBirth date of birth of user.
      */
-    public void updateUser(String firstName, String lastName, String email, String langKey, String imageUrl) {
+    public Map<String, Object> updateUser(
+        String firstName,
+        String lastName,
+        String email,
+        String langKey,
+        String imageUrl,
+        String phoneNumber,
+        String address,
+        LocalDate dateOfBirth
+    ) {
+        Map<String, Object> changedFields = new HashMap<>();
+
         SecurityUtils.getCurrentUserLogin()
             .flatMap(userRepository::findOneByLogin)
             .ifPresent(user -> {
-                user.setFirstName(firstName);
-                user.setLastName(lastName);
-                if (email != null) {
-                    user.setEmail(email.toLowerCase());
+                updateIfChanged("firstName", firstName, user::getFirstName, user::setFirstName, changedFields);
+                updateIfChanged("lastName", lastName, user::getLastName, user::setLastName, changedFields);
+
+                if (email != null && !email.equalsIgnoreCase(user.getEmail())) {
+                    String lower = email.toLowerCase();
+                    user.setEmail(lower);
+                    changedFields.put("email", lower);
                 }
-                user.setLangKey(langKey);
-                user.setImageUrl(imageUrl);
-                userRepository.save(user);
-                LOG.debug("Changed Information for User: {}", user);
+
+                updateIfChanged("langKey", langKey, user::getLangKey, user::setLangKey, changedFields);
+                updateIfChanged("imageUrl", imageUrl, user::getImageUrl, user::setImageUrl, changedFields);
+                updateIfChanged("phoneNumber", phoneNumber, user::getPhoneNumber, user::setPhoneNumber, changedFields);
+                updateIfChanged("address", address, user::getAddress, user::setAddress, changedFields);
+                updateIfChanged("dateOfBirth", dateOfBirth, user::getDateOfBirth, user::setDateOfBirth, changedFields);
+
+                if (!changedFields.isEmpty()) {
+                    String currentLogin = SecurityUtils.getCurrentUserLogin().orElse(null);
+                    user.setLastModifiedBy(currentLogin);
+                    user.setLastModifiedDate(Instant.now());
+                    userRepository.save(user);
+                    userSearchRepository.index(user);
+                    LOG.debug("Changed Information for User: {}", user);
+                }
             });
+
+        return changedFields;
+    }
+
+    /**
+     * Generic helper.
+     */
+    private <T> void updateIfChanged(
+        String fieldName,
+        T newValue,
+        Supplier<T> oldValueSupplier,
+        Consumer<T> setter,
+        Map<String, Object> changedFields
+    ) {
+        T oldValue = oldValueSupplier.get();
+        if (newValue != null && !newValue.equals(oldValue)) {
+            setter.accept(newValue);
+            changedFields.put(fieldName, newValue);
+        }
     }
 
     @Transactional
@@ -282,6 +353,7 @@ public class UserService {
             .forEach(user -> {
                 LOG.debug("Deleting not activated user {}", user.getLogin());
                 userRepository.delete(user);
+                userSearchRepository.deleteFromIndex(user);
             });
     }
 
@@ -292,5 +364,12 @@ public class UserService {
     @Transactional(readOnly = true)
     public List<String> getAuthorities() {
         return authorityRepository.findAll().stream().map(Authority::getName).toList();
+    }
+
+    public AdminUserDTO updateImage(Long userId, String imageUrl) {
+        User user = userRepository.findById(userId).orElseThrow(() -> new UsernameNotFoundException("User not found: " + userId));
+        user.setImageUrl(imageUrl);
+        userRepository.save(user);
+        return new AdminUserDTO(user);
     }
 }

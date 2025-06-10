@@ -5,3 +5,7 @@ services:
     extends:
       file: ./mysql.yml
       service: mysql
+  elasticsearch:
+    extends:
+      file: ./elasticsearch.yml
+      service: elasticsearch
