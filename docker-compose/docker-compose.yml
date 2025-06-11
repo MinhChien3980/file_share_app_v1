@@ -5,10 +5,9 @@ services:
       - _JAVA_OPTIONS=-Xmx512m -Xms256m
       - SPRING_PROFILES_ACTIVE=prod,api-docs
       - MANAGEMENT_PROMETHEUS_METRICS_EXPORT_ENABLED=true
-      - SPRING_DATASOURCE_URL=jdbc:mysql://fileshareappv1-mysql:3306/fileshareappv1?useUnicode=true&characterEncoding=utf8&useSSL=false&useLegacyDatetimeCode=false&createDatabaseIfNotExist=true
+      - SPRING_DATASOURCE_URL=jdbc:mysql://fileshareappv1-mysql:3306/fileshareappv1?useUnicode=true&characterEncoding=utf8&useSSL=false&autoReconnect=true&failOverReadOnly=false&maxReconnects=3
       - SPRING_LIQUIBASE_URL=jdbc:mysql://fileshareappv1-mysql:3306/fileshareappv1?useUnicode=true&characterEncoding=utf8&useSSL=false&useLegacyDatetimeCode=false&createDatabaseIfNotExist=true
       - SPRING_ELASTICSEARCH_URIS=http://fileshareappv1-elasticsearch:9200
-      #      - SPRING_ELASTICSEARCH_URIS=http://fileshareapp.io.vn/es
       - APP_STORAGE_LOCATION=/data/uploads
       - SPRING_DATASOURCE_USERNAME=root
       - SPRING_DATASOURCE_PASSWORD=
