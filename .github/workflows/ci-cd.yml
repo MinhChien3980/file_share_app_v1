@@ -33,20 +33,12 @@ jobs:
             set -e
             cd ~/project/file_share_app_v1
 
+            git checkout develop
             git pull
 
             ./mvnw clean verify -Pprod jib:dockerBuild -DskipTests
 
             cd docker-compose
             docker compose build
-           if ! docker compose up -d --remove-orphans; then
-              echo
-              echo "🛑 docker compose up failed – dumping Elasticsearch logs:"
-              echo "========================================================="
-              docker compose logs fileshareappv1-elasticsearch
-              echo "========================================================="
-              exit 1
-            fi
-
-            docker compose logs --tail=50 fileshareappv1-elasticsearch
+            docker compose up -d --remove-orphans
           EOF
