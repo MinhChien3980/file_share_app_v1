@@ -55,6 +55,28 @@ public class PostService {
     }
 
     /**
+     * Save a post with current user and proper tag handling.
+     *
+     * @param postDTO the entity to save.
+     * @return the persisted entity.
+     */
+    @Transactional
+    public PostDTO saveWithCurrentUser(PostDTO postDTO) {
+        LOG.debug("Request to save Post with current user : {}", postDTO);
+
+        // Ensure the post doesn't have an ID (for new posts)
+        postDTO.setId(null);
+
+        Post post = postMapper.toEntity(postDTO);
+        post = postRepository.save(post);
+        postSearchRepository.index(post);
+
+        // Reload with eager relationships to get proper tag data
+        Post reloaded = postRepository.findOneWithEagerRelationships(post.getId()).orElse(post);
+        return postMapper.toDto(reloaded);
+    }
+
+    /**
      * Save a post.
      *
      * @param postDTO the entity to save.

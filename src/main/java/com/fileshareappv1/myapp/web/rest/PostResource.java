@@ -86,7 +86,36 @@ public class PostResource {
         if (postDTO.getId() != null) {
             throw new BadRequestAlertException("A new post cannot already have an ID", ENTITY_NAME, "idexists");
         }
-        postDTO = postService.save(postDTO);
+
+        String login = SecurityUtils.getCurrentUserLogin()
+            .orElseThrow(() -> new BadRequestAlertException("User not authenticated", ENTITY_NAME, "notauthenticated"));
+        User user = userRepository
+            .findOneByLogin(login)
+            .orElseThrow(() -> new BadRequestAlertException("User not found", ENTITY_NAME, "usernotfound"));
+        postDTO.setUser(new UserDTO(user));
+
+        if (postDTO.getTags() != null && !postDTO.getTags().isEmpty()) {
+            Set<TagDTO> processedTags = postDTO
+                .getTags()
+                .stream()
+                .filter(tagDTO -> tagDTO.getId() != null)
+                .map(tagDTO ->
+                    tagRepository
+                        .findById(tagDTO.getId())
+                        .map(tag -> {
+                            TagDTO processedTagDTO = new TagDTO();
+                            processedTagDTO.setId(tag.getId());
+                            processedTagDTO.setName(tag.getName());
+                            return processedTagDTO;
+                        })
+                        .orElse(null)
+                )
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+            postDTO.setTags(processedTags);
+        }
+
+        postDTO = postService.saveWithCurrentUser(postDTO);
         return ResponseEntity.created(new URI("/api/posts/" + postDTO.getId()))
             .headers(HeaderUtil.createEntityCreationAlert(applicationName, true, ENTITY_NAME, postDTO.getId().toString()))
             .body(postDTO);
@@ -260,12 +289,22 @@ public class PostResource {
         User user = userRepository.findOneByLogin(login).orElseThrow(() -> new RuntimeException("User không tồn tại"));
         dto.setUser(new UserDTO(user));
 
-        Set<TagDTO> tagDTOs = form
-            .getTagIds()
-            .stream()
-            .flatMap(id -> tagRepository.findById(id).stream())
-            .map(tagMapper::toDto)
-            .collect(Collectors.toSet());
+        Set<TagDTO> tagDTOs = new HashSet<>();
+        if (form.getTagIds() != null && !form.getTagIds().isEmpty()) {
+            tagDTOs = form
+                .getTagIds()
+                .stream()
+                .distinct()
+                .map(tagId -> tagRepository.findById(tagId).orElse(null))
+                .filter(Objects::nonNull)
+                .map(tag -> {
+                    TagDTO tagDTO = new TagDTO();
+                    tagDTO.setId(tag.getId());
+                    tagDTO.setName(tag.getName());
+                    return tagDTO;
+                })
+                .collect(Collectors.toSet());
+        }
         dto.setTags(tagDTOs);
 
         PostDTO result = postService.saveWithFiles(dto, form.getFiles());
