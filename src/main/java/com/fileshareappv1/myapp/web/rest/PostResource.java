@@ -24,7 +24,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Sort.Direction;
+import org.springframework.data.domain.Sort.Order;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -203,11 +207,19 @@ public class PostResource {
         @RequestParam(name = "eagerload", required = false, defaultValue = "true") boolean eagerload
     ) {
         LOG.debug("REST request to get a page of Posts");
+
+        // Create a new Pageable with sorting by createdAt DESC (newest first)
+        Pageable sortedPageable = PageRequest.of(
+            pageable.getPageNumber(),
+            pageable.getPageSize(),
+            Sort.by(Sort.Direction.DESC, "createdAt")
+        );
+
         Page<PostDTO> page;
         if (eagerload) {
-            page = postService.findAllWithEagerRelationships(pageable);
+            page = postService.findAllWithEagerRelationships(sortedPageable);
         } else {
-            page = postService.findAll(pageable);
+            page = postService.findAll(sortedPageable);
         }
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
         return ResponseEntity.ok().headers(headers).body(page.getContent());
@@ -256,7 +268,14 @@ public class PostResource {
     ) {
         LOG.debug("REST request to search for a page of Posts for query {}", query);
         try {
-            Page<PostDTO> page = postService.search(query, pageable);
+            // Create a new Pageable with sorting by createdAt DESC (newest first)
+            Pageable sortedPageable = PageRequest.of(
+                pageable.getPageNumber(),
+                pageable.getPageSize(),
+                Sort.by(Sort.Direction.DESC, "createdAt")
+            );
+
+            Page<PostDTO> page = postService.search(query, sortedPageable);
             HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
             return ResponseEntity.ok().headers(headers).body(page.getContent());
         } catch (RuntimeException e) {
@@ -270,7 +289,14 @@ public class PostResource {
     @GetMapping("/me")
     public ResponseEntity<List<PostDTO>> getMyPosts(@org.springdoc.core.annotations.ParameterObject Pageable pageable) {
         try {
-            Page<PostDTO> page = postService.findMyPosts(pageable);
+            // Create a new Pageable with sorting by createdAt DESC (newest first)
+            Pageable sortedPageable = PageRequest.of(
+                pageable.getPageNumber(),
+                pageable.getPageSize(),
+                Sort.by(Sort.Direction.DESC, "createdAt")
+            );
+
+            Page<PostDTO> page = postService.findMyPosts(sortedPageable);
             HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
             return ResponseEntity.ok().headers(headers).body(page.getContent());
         } catch (Exception e) {

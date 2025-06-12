@@ -39,4 +39,12 @@ public interface PostMapper extends EntityMapper<PostDTO, Post> {
     default Set<TagDTO> toDtoTagNameSet(Set<Tag> tag) {
         return tag.stream().map(this::toDtoTagName).collect(Collectors.toSet());
     }
+
+    @Named("mapPostsToIds")
+    default Set<Long> mapPostsToIds(Set<Post> posts) {
+        if (posts == null) {
+            return Set.of();
+        }
+        return posts.stream().map(Post::getId).collect(Collectors.toSet());
+    }
 }
