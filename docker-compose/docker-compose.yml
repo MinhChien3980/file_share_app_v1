@@ -1,24 +1,27 @@
 services:
   fileshareappv1:
     image: fileshareappv1
+    restart: on-failure
     environment:
       - _JAVA_OPTIONS=-Xmx512m -Xms256m
       - SPRING_PROFILES_ACTIVE=prod,api-docs,faker
       - MANAGEMENT_PROMETHEUS_METRICS_EXPORT_ENABLED=true
-      - SPRING_DATASOURCE_URL=jdbc:mysql://fileshareappv1-mysql:3306/fileshareappv1?useUnicode=true&characterEncoding=utf8&useSSL=false&autoReconnect=true&failOverReadOnly=false&maxReconnects=3
-      - SPRING_LIQUIBASE_URL=jdbc:mysql://fileshareappv1-mysql:3306/fileshareappv1?useUnicode=true&characterEncoding=utf8&useSSL=false&useLegacyDatetimeCode=false&createDatabaseIfNotExist=true
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/fileshareappv1?useUnicode=true&characterEncoding=utf8&useSSL=false&autoReconnect=true&failOverReadOnly=false&maxReconnects=3
+      - SPRING_LIQUIBASE_URL=jdbc:mysql://mysql:3306/fileshareappv1?useUnicode=true&characterEncoding=utf8&useSSL=false&useLegacyDatetimeCode=false&createDatabaseIfNotExist=true
       - SPRING_ELASTICSEARCH_URIS=http://fileshareappv1-elasticsearch:9200
       - APP_STORAGE_LOCATION=/data/uploads
       - SPRING_DATASOURCE_USERNAME=root
       - SPRING_DATASOURCE_PASSWORD=
-      - SPRING_DATASOURCE_HIKARI_CONNECTION-TEST-QUERY=SELECT 1
-      - SPRING_DATASOURCE_HIKARI_VALIDATION-TIMEOUT=5000
-      - SPRING_DATASOURCE_HIKARI_CONNECTION-TIMEOUT=30000
-      - SPRING_DATASOURCE_HIKARI_IDLE-TIMEOUT=600000
-      - SPRING_DATASOURCE_HIKARI_MAX-LIFETIME=25000000
-      - SPRING_DATASOURCE_HIKARI_MINIMUM-IDLE=5
-      - SPRING_DATASOURCE_HIKARI_MAXIMUM-POOL-SIZE=20
-      - SPRING_DATASOURCE_HIKARI_INITIALIZATION-FAIL-TIMEOUT=0
+      - SPRING_DATASOURCE_HIKARI_CONNECTION-TEST-QUERY= SELECT 1
+      - SPRING_DATASOURCE_HIKARI_VALIDATION-TIMEOUT= 5000
+      - SPRING_DATASOURCE_HIKARI_CONNECTION-TIMEOUT= 30000
+      - SPRING_DATASOURCE_HIKARI_IDLE-TIMEOUT= 600000
+      - SPRING_DATASOURCE_HIKARI_MAX-LIFETIME= 25000000
+      - SPRING_DATASOURCE_HIKARI_MINIMUM-IDLE= 5
+      - SPRING_DATASOURCE_HIKARI_MAXIMUM-POOL-SIZE= 20
+      - SPRING_DATASOURCE_HIKARI_INITIALIZATION-FAIL-TIMEOUT= 0
+      # <<< NEW: keepalive so MySQL doesn't kill idle connections >>>
+      - SPRING_DATASOURCE_HIKARI_KEEPALIVE-TIME= 300000
     ports:
       - '8080:8080'
     healthcheck:
@@ -31,14 +34,18 @@ services:
       timeout: 5s
       retries: 40
     depends_on:
-      fileshareappv1-mysql:
+      mysql:
         condition: service_healthy
-      fileshareappv1-elasticsearch:
+      elasticsearch:
         condition: service_healthy
     volumes:
       - ./uploads:/data/uploads
-  fileshareappv1-mysql:
+    networks:
+      - appnet
+
+  mysql:
     image: mysql:9.2.0
+    restart: always
     ports:
       - '3306:3306'
     environment:
@@ -60,8 +67,11 @@ services:
     volumes:
       - mysql_data:/var/lib/mysql
       - ./config/mysql/mysql.cnf:/etc/mysql/conf.d/mysql.cnf:ro
-  fileshareappv1-elasticsearch:
+    networks:
+      - appnet
+  elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.13.4
+    restart: always
     ports:
       - '9200:9200'
     environment:
@@ -75,7 +85,13 @@ services:
       retries: 10
     volumes:
       - es_data:/usr/share/elasticsearch/data
+    networks:
+      - appnet
 
 volumes:
   mysql_data:
   es_data:
+
+networks:
+  appnet:
+    driver: bridge
