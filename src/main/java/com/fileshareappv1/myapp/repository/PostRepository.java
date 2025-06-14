@@ -43,4 +43,7 @@ public interface PostRepository extends PostRepositoryWithBagRelationships, JpaR
 
     @Query("select post from Post post where post.user.login = ?#{authentication.name}")
     Page<Post> findByCurrentUser(Pageable pageable);
+
+    @Query("select distinct post from Post post left join post.tags tag where tag.name in :tagNames")
+    Page<Post> findByTags(@Param("tagNames") List<String> tagNames, Pageable pageable);
 }

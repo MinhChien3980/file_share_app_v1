@@ -267,4 +267,14 @@ public class PostService {
         }
         return dtos;
     }
+
+    public Page<PostDTO> findByCurrentUser(Pageable pageable) {
+        LOG.debug("Request to get all Posts for current user");
+        return postRepository.findByCurrentUser(pageable).map(postMapper::toDto);
+    }
+
+    public Page<PostDTO> findByTags(List<String> tagNames, Pageable pageable) {
+        LOG.debug("Request to get Posts by tags: {}", tagNames);
+        return postRepository.findByTags(tagNames, pageable).map(postMapper::toDto);
+    }
 }

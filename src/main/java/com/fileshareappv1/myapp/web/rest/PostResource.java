@@ -337,4 +337,21 @@ public class PostResource {
 
         return ResponseEntity.created(new URI("/api/posts/" + result.getId())).body(result);
     }
+
+    @GetMapping("/posts/current-user")
+    public ResponseEntity<Page<PostDTO>> getCurrentUserPosts(@org.springdoc.core.annotations.ParameterObject Pageable pageable) {
+        LOG.debug("REST request to get Posts for current user");
+        Page<PostDTO> posts = postService.findByCurrentUser(pageable);
+        return ResponseEntity.ok().body(posts);
+    }
+
+    @GetMapping("/posts/search/tags")
+    public ResponseEntity<Page<PostDTO>> searchPostsByTags(
+        @RequestParam List<String> tags,
+        @org.springdoc.core.annotations.ParameterObject Pageable pageable
+    ) {
+        LOG.debug("REST request to search Posts by tags: {}", tags);
+        Page<PostDTO> posts = postService.findByTags(tags, pageable);
+        return ResponseEntity.ok().body(posts);
+    }
 }
