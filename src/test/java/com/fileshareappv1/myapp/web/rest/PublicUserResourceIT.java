@@ -7,6 +7,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.fileshareappv1.myapp.IntegrationTest;
 import com.fileshareappv1.myapp.domain.User;
 import com.fileshareappv1.myapp.repository.UserRepository;
+import com.fileshareappv1.myapp.repository.search.UserSearchRepository;
 import com.fileshareappv1.myapp.security.AuthoritiesConstants;
 import com.fileshareappv1.myapp.service.UserService;
 import java.util.Set;
@@ -33,6 +34,14 @@ class PublicUserResourceIT {
 
     @Autowired
     private UserService userService;
+
+    /**
+     * This repository is mocked in the com.fileshareappv1.myapp.repository.search test package.
+     *
+     * @see com.fileshareappv1.myapp.repository.search.UserSearchRepositoryMockConfiguration
+     */
+    @Autowired
+    private UserSearchRepository mockUserSearchRepository;
 
     @Autowired
     private MockMvc restUserMockMvc;

@@ -1,14 +1,29 @@
 services:
   fileshareappv1:
     image: fileshareappv1
+    restart: on-failure
     environment:
       - _JAVA_OPTIONS=-Xmx512m -Xms256m
-      - SPRING_PROFILES_ACTIVE=prod,api-docs
+      - SPRING_PROFILES_ACTIVE=prod,api-docs,faker
       - MANAGEMENT_PROMETHEUS_METRICS_EXPORT_ENABLED=true
-      - SPRING_DATASOURCE_URL=jdbc:mysql://fileshareappv1-mysql:3306/fileshareappv1?useUnicode=true&characterEncoding=utf8&useSSL=false&useLegacyDatetimeCode=false&createDatabaseIfNotExist=true
-      - SPRING_LIQUIBASE_URL=jdbc:mysql://fileshareappv1-mysql:3306/fileshareappv1?useUnicode=true&characterEncoding=utf8&useSSL=false&useLegacyDatetimeCode=false&createDatabaseIfNotExist=true
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/fileshareappv1?useUnicode=true&characterEncoding=utf8&useSSL=false&autoReconnect=true&failOverReadOnly=false&maxReconnects=3
+      - SPRING_LIQUIBASE_URL=jdbc:mysql://mysql:3306/fileshareappv1?useUnicode=true&characterEncoding=utf8&useSSL=false&useLegacyDatetimeCode=false&createDatabaseIfNotExist=true
+      - SPRING_ELASTICSEARCH_URIS=http://elasticsearch:9200
+      - APP_STORAGE_LOCATION=/data/uploads
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=
+      - SPRING_DATASOURCE_HIKARI_CONNECTION-TEST-QUERY= SELECT 1
+      - SPRING_DATASOURCE_HIKARI_VALIDATION-TIMEOUT= 5000
+      - SPRING_DATASOURCE_HIKARI_CONNECTION-TIMEOUT= 30000
+      - SPRING_DATASOURCE_HIKARI_IDLE-TIMEOUT= 600000
+      - SPRING_DATASOURCE_HIKARI_MAX-LIFETIME= 25000000
+      - SPRING_DATASOURCE_HIKARI_MINIMUM-IDLE= 5
+      - SPRING_DATASOURCE_HIKARI_MAXIMUM-POOL-SIZE= 20
+      - SPRING_DATASOURCE_HIKARI_INITIALIZATION-FAIL-TIMEOUT= 0
+      # <<< NEW: keepalive so MySQL doesn't kill idle connections >>>
+      - SPRING_DATASOURCE_HIKARI_KEEPALIVE-TIME= 300000
     ports:
-      - 8080:8080
+      - '8080:8080'
     healthcheck:
       test:
         - CMD
@@ -19,20 +34,64 @@ services:
       timeout: 5s
       retries: 40
     depends_on:
-      fileshareappv1-mysql:
+      mysql:
         condition: service_healthy
-  fileshareappv1-mysql:
-    image: mysql:9.2.0
+      elasticsearch:
+        condition: service_healthy
     volumes:
-      - ./config/mysql:/etc/mysql/conf.d
+      - ./uploads:/data/uploads
+    networks:
+      - appnet
+
+  mysql:
+    image: mysql:9.2.0
+    restart: always
+    ports:
+      - '3306:3306'
     environment:
       - MYSQL_ALLOW_EMPTY_PASSWORD=yes
       - MYSQL_DATABASE=fileshareappv1
-    command: mysqld --lower_case_table_names=1 --skip-mysqlx --character_set_server=utf8mb4 --explicit_defaults_for_timestamp
+    command: >
+      mysqld
+        --lower_case_table_names=1
+        --skip-mysqlx
+        --character_set_server=utf8mb4
+        --explicit_defaults_for_timestamp=true
     healthcheck:
       test:
         - CMD-SHELL
-        - mysql -e "SHOW DATABASES;" && sleep 5
+        - mysql -uroot -e 'SELECT 1'
+      interval: 60s
+      timeout: 5s
+      retries: 3
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./config/mysql/mysql.cnf:/etc/mysql/conf.d/mysql.cnf:ro
+    networks:
+      - appnet
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.13.4
+    restart: always
+    ports:
+      - '9200:9200'
+    environment:
+      - ES_JAVA_OPTS=-Xms256m -Xmx256m
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+    healthcheck:
+      test: ['CMD-SHELL', "curl -f 'http://localhost:9200/_cluster/health?wait_for_status=yellow&timeout=30s' || exit 1"]
       interval: 5s
       timeout: 10s
       retries: 10
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+    networks:
+      - appnet
+
+volumes:
+  mysql_data:
+  es_data:
+
+networks:
+  appnet:
+    driver: bridge

@@ -3,9 +3,11 @@ package com.fileshareappv1.myapp.config;
 import static org.springframework.security.config.Customizer.withDefaults;
 
 import com.fileshareappv1.myapp.security.*;
+import com.fileshareappv1.myapp.service.FirebaseUserService;
 import com.fileshareappv1.myapp.web.filter.SpaWebFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -38,6 +40,37 @@ public class SecurityConfiguration {
     }
 
     @Bean
+    @Order(1)
+    public SecurityFilterChain firebaseChain(
+        HttpSecurity http,
+        MvcRequestMatcher.Builder mvc,
+        CustomJwtAuthenticationConverter customConverter
+    ) throws Exception {
+        http
+            .securityMatcher(mvc.pattern(HttpMethod.POST, "/api/test-auth"))
+            .cors(withDefaults())
+            .csrf(csrf -> csrf.disable())
+            .addFilterAfter(new SpaWebFilter(), BasicAuthenticationFilter.class)
+            .headers(headers ->
+                headers
+                    .contentSecurityPolicy(csp -> csp.policyDirectives(jHipsterProperties.getSecurity().getContentSecurityPolicy()))
+                    .frameOptions(FrameOptionsConfig::sameOrigin)
+                    .referrerPolicy(r -> r.policy(ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN))
+            )
+            .authorizeHttpRequests(authz -> authz.anyRequest().permitAll())
+            .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .exceptionHandling(ex ->
+                ex
+                    .authenticationEntryPoint(new BearerTokenAuthenticationEntryPoint())
+                    .accessDeniedHandler(new BearerTokenAccessDeniedHandler())
+            )
+            .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> jwt.jwtAuthenticationConverter(customConverter)));
+        return http.build();
+    }
+
+    // 2) Management chain for /management/**
+    @Bean
+    @Order(2)
     public SecurityFilterChain filterChain(HttpSecurity http, MvcRequestMatcher.Builder mvc) throws Exception {
         http
             .cors(withDefaults())
@@ -65,6 +98,7 @@ public class SecurityConfiguration {
                     .requestMatchers(mvc.pattern("/swagger-ui/**")).permitAll()
                     .requestMatchers(mvc.pattern(HttpMethod.POST, "/api/authenticate")).permitAll()
                     .requestMatchers(mvc.pattern(HttpMethod.GET, "/api/authenticate")).permitAll()
+                    .requestMatchers(mvc.pattern(HttpMethod.GET, "/api/files/download/**")).permitAll()
                     .requestMatchers(mvc.pattern("/api/register")).permitAll()
                     .requestMatchers(mvc.pattern("/api/activate")).permitAll()
                     .requestMatchers(mvc.pattern("/api/account/reset-password/init")).permitAll()
@@ -91,5 +125,10 @@ public class SecurityConfiguration {
     @Bean
     MvcRequestMatcher.Builder mvc(HandlerMappingIntrospector introspector) {
         return new MvcRequestMatcher.Builder(introspector);
+    }
+
+    @Bean
+    public CustomJwtAuthenticationConverter customJwtAuthenticationConverter(FirebaseUserService firebaseUserService) {
+        return new CustomJwtAuthenticationConverter(firebaseUserService);
     }
 }

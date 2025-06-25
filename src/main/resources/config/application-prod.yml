@@ -17,7 +17,10 @@ logging:
   level:
     ROOT: INFO
     tech.jhipster: INFO
+    org.hibernate.SQL: DEBUG
     com.fileshareappv1.myapp: INFO
+    com.fileshareappv1: DEBUG
+    org.springframework.web: DEBUG
 
 management:
   prometheus:
@@ -28,36 +31,56 @@ management:
 spring:
   devtools:
     restart:
-      enabled: true
+      enabled: false
     livereload:
-      enabled: true
+      enabled: false
   datasource:
     type: com.zaxxer.hikari.HikariDataSource
-    url: jdbc:mysql://localhost:3306/fileShareAppV1?useUnicode=true&characterEncoding=utf8&useSSL=false&useLegacyDatetimeCode=false&createDatabaseIfNotExist=true
-    username: root
-    password:
+    #    url: jdbc:mysql://localhost:3306/fileShareAppV1?useUnicode=true&characterEncoding=utf8&useSSL=false&useLegacyDatetimeCode=false&createDatabaseIfNotExist=true
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME:root}
+    password: ${SPRING_DATASOURCE_PASSWORD:}
     hikari:
-      poolName: Hikari
+      pool-name: HikariPool-FSA
       auto-commit: false
       data-source-properties:
         cachePrepStmts: true
         prepStmtCacheSize: 250
         prepStmtCacheSqlLimit: 2048
         useServerPrepStmts: true
+      minimum-idle: 5
+      maximum-pool-size: 20
+      connection-timeout: 30000
+      # Trước khi cấp connection, Hikari chạy SELECT 1 để kiểm tra
+      connection-test-query: SELECT 1
+      validation-timeout: 5000
+      # Nếu connection idle quá lâu, pool sẽ đóng
+      idle-timeout: 600000
+      # Mỗi connection chỉ sống tối đa "max-lifetime" rồi sẽ bị vứt
+      # Hãy đặt thấp hơn mysql wait_timeout (mặc định 28800s = 8h)
+      max-lifetime: 25000000
+      # Không fail ngay khi start nếu DB chưa ready
+      initialization-fail-timeout: 0
+  elasticsearch:
+    #    uris: http://fileshareappv1-elasticsearch:9200
+    #    connection:
+    #        path-prefix: /es
+    uris: ${SPRING_ELASTICSEARCH_URIS}
   # Replace by 'prod, faker' to add the faker context and have sample data loaded in production
   liquibase:
-    contexts: prod
+    contexts: prod, faker
   mail:
     host: smtp.gmail.com
     port: 587
     username: buiminhchien03@gmail.com
     password: kwpjmwdvlcglcosk
     protocol: smtp
-    tls: true
-    properties.mail.smtp:
-      auth: true
-      starttls.enable: true
-      ssl.trust: smtp.gmail.com
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls.enable: true
+          ssl.trust: smtp.gmail.com
   thymeleaf:
     cache: true
 
@@ -85,7 +108,7 @@ server:
   shutdown: graceful # see https://docs.spring.io/spring-boot/docs/current/reference/html/spring-boot-features.html#boot-features-graceful-shutdown
   compression:
     enabled: true
-    mime-types: text/html,text/xml,text/plain,text/css,application/javascript,application/json,image/svg+xml
+    mime-types: text/html,application/json,application/pdf,application/xml,text/xml,text/css,text/javascript,application/javascript,application/x-javascript,application/x-www-form-urlencoded,image/*, application/octet-stream, application/x-www-form-urlencoded ,application/*
     min-response-size: 1024
 
 # ===================================================================
@@ -106,12 +129,12 @@ jhipster:
         # - In the Consul configserver
         # - In a separate `application-prod.yml` file, in the same folder as your executable JAR file
         # - In the `JHIPSTER_SECURITY_AUTHENTICATION_JWT_BASE64_SECRET` environment variable
-        base64-secret: Mjg1Y2YyODIwNGQ1MGVjNGZiMDdkOGVmMzgyNTQ3YTEwMWQzYWQ0ZDM0MjFhMTVlM2VkZDliYmJhMWYwOWFhZjk0Njk0MTk0ZmM3ZGEyMzdmZTAwNDhiZmJlYTI5NGQyNGUxMzc2ODhiNWIyNzgxNjkyOTdiMTM5ZjA3M2UwOWM=
+        base64-secret: CBo/PjqlNbe0zsuD6Sg1xzbUOwt2O77uXR98/U7a9vCrxVUziB7h+SvFseej+FWbWkC+rpIeZN0F0ckqVWUyvA==
         # Token is valid 24 hours
         token-validity-in-seconds: 86400
         token-validity-in-seconds-for-remember-me: 2592000
   mail: # specific JHipster mail property, for standard properties see MailProperties
-    base-url: http://my-server-url-to-change # Modify according to your server's URL
+    base-url: http://fileshareapp.io.vn # Modify according to your server's URL
   logging:
     use-json-format: false # By default, logs are not in Json format
     logstash: # Forward logs to logstash over a socket, used by LoggingConfiguration

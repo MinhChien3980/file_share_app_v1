@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd
+                        http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd">
+
+    <!--
+        Added the entity Post.
+    -->
+    <changeSet id="20250517201738-1" author="jhipster">
+        <createTable tableName="post">
+            <column name="id" type="bigint" autoIncrement="true" startWith="1500">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="content" type="${clobType}">
+                <constraints nullable="false" />
+            </column>
+            <column name="created_at" type="${datetimeType}">
+                <constraints nullable="false" />
+            </column>
+            <column name="updated_at" type="${datetimeType}">
+                <constraints nullable="false" />
+            </column>
+            <column name="location_name" type="varchar(255)">
+                <constraints nullable="true" />
+            </column>
+            <column name="location_lat" type="decimal(21,2)">
+                <constraints nullable="true" />
+            </column>
+            <column name="location_long" type="decimal(21,2)">
+                <constraints nullable="true" />
+            </column>
+            <column name="privacy" type="varchar(255)">
+                <constraints nullable="false" />
+            </column>
+            <column name="scheduled_at" type="${datetimeType}">
+                <constraints nullable="true" />
+            </column>
+            <column name="view_count" type="bigint">
+                <constraints nullable="true" />
+            </column>
+            <column name="comment_count" type="bigint">
+                <constraints nullable="true" />
+            </column>
+            <column name="share_count" type="bigint">
+                <constraints nullable="true" />
+            </column>
+            <column name="reaction_count" type="bigint">
+                <constraints nullable="true" />
+            </column>
+            <column name="user_id" type="bigint">
+                <constraints nullable="true" />
+            </column>
+            <!-- jhipster-needle-liquibase-add-column - JHipster will add columns here -->
+        </createTable>
+        <dropDefaultValue tableName="post" columnName="created_at" columnDataType="${datetimeType}"/>
+        <dropDefaultValue tableName="post" columnName="updated_at" columnDataType="${datetimeType}"/>
+        <dropDefaultValue tableName="post" columnName="scheduled_at" columnDataType="${datetimeType}"/>
+    </changeSet>
+
+    <changeSet id="20250517201738-1-relations" author="jhipster">
+
+        <createTable tableName="rel_post__tags">
+            <column name="tags_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="post_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addPrimaryKey columnNames="post_id, tags_id" tableName="rel_post__tags"/>
+    </changeSet>
+
+</databaseChangeLog>

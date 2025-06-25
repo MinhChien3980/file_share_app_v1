@@ -1,0 +1,38 @@
+{
+  "fileShareAppV1App": {
+    "post": {
+      "home": {
+        "title": "Posts",
+        "refreshListLabel": "Refresh list",
+        "createLabel": "Thêm mới một Post",
+        "createOrEditLabel": "Thêm mới hoặc cập nhật Post",
+        "search": "Tìm Post",
+        "notFound": "No Posts found"
+      },
+      "created": "Một Post mới được tạo với định danh {{ param }}",
+      "updated": "Một Post cập nhật với định danh {{ param }}",
+      "deleted": "Một Post đã xóa với định danh {{ param }}",
+      "delete": {
+        "question": "Bạn có chắc là muốn xóa Post {{ id }}?"
+      },
+      "detail": {
+        "title": "Post"
+      },
+      "id": "ID",
+      "content": "Content",
+      "createdAt": "Created At",
+      "updatedAt": "Updated At",
+      "locationName": "Location Name",
+      "locationLat": "Location Lat",
+      "locationLong": "Location Long",
+      "privacy": "Privacy",
+      "scheduledAt": "Scheduled At",
+      "viewCount": "View Count",
+      "commentCount": "Comment Count",
+      "shareCount": "Share Count",
+      "reactionCount": "Reaction Count",
+      "user": "User",
+      "tags": "Tags"
+    }
+  }
+}
